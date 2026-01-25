@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
 
 const quickLinks = [
   { name: "Home", href: "/" },
@@ -43,13 +43,16 @@ export function Footer() {
               transparent pricing.
             </p>
             <div className="text-sm text-gray-500">
-              <p className="mb-1">
-                <MapPin className="w-4 h-4 inline mr-1" />
-                Serving: Toronto, GTA, Ontario, and all of Canada
+              <p className="mb-2">
+                <MapPin className="w-4 h-4 inline mr-1 text-red-500" />
+                <span className="text-white">91 Peelar Rd, Concord, ON L4K 1A3</span>
               </p>
-              <p>
-                Specializing in: DTF Heat Transfers, Screen Printing, Embroidery,
-                Sublimation
+              <p className="mb-2">
+                <Clock className="w-4 h-4 inline mr-1 text-red-500" />
+                <span className="text-gray-400">Mon-Sat: 9am-6pm | Sun: Closed</span>
+              </p>
+              <p className="text-gray-400">
+                Serving: Vaughan, Toronto, GTA, Ontario &amp; all of Canada
               </p>
             </div>
           </div>
@@ -101,11 +104,23 @@ export function Footer() {
             <h4 className="text-lg font-bold text-white mb-4">Contact PrintGuys</h4>
             <div className="space-y-4">
               <a
+                href="https://maps.google.com/?q=91+Peelar+Rd,+Concord,+ON+L4K+1A3"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <MapPin className="w-5 h-5 mr-2 text-red-500 flex-shrink-0 mt-0.5" />
+                <span className="text-white">
+                  91 Peelar Rd<br />
+                  Concord, ON L4K 1A3
+                </span>
+              </a>
+              <a
                 href="tel:6476856286"
                 className="flex items-center text-gray-400 hover:text-red-500 transition-colors"
               >
                 <Phone className="w-5 h-5 mr-2 text-red-500" />
-                <span className="font-semibold text-white">647-685-6286</span>
+                <span className="font-semibold text-white">(647) 685-6286</span>
               </a>
               <a
                 href="mailto:printguys.ca@gmail.com"
@@ -116,6 +131,10 @@ export function Footer() {
                   printguys.ca@gmail.com
                 </span>
               </a>
+              <div className="flex items-center text-gray-400">
+                <Clock className="w-5 h-5 mr-2 text-red-500" />
+                <span>Mon-Sat: 9am-6pm</span>
+              </div>
             </div>
           </div>
         </div>

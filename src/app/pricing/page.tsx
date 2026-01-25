@@ -302,7 +302,7 @@ export default function PricingPage() {
           <div className="mt-6 flex flex-col justify-center gap-4 text-red-100 sm:flex-row sm:gap-8">
             <a href="tel:6476856286" className="flex items-center justify-center gap-2 hover:text-white">
               <Phone className="h-4 w-4" />
-              647-685-6286
+              (647) 685-6286
             </a>
             <a href="mailto:printguys.ca@gmail.com" className="flex items-center justify-center gap-2 hover:text-white">
               <Mail className="h-4 w-4" />

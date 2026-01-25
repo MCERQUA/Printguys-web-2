@@ -20,7 +20,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Sublimation Printing Canada | Photo-Quality Full Color | PrintGuys",
-  description: "Professional sublimation printing in Canada. Photo-quality, full-color, edge-to-edge prints on mugs, apparel & promotional items. Permanent, vibrant results. Call 647-685-6286.",
+  description: "Professional sublimation printing in Canada. Photo-quality, full-color, edge-to-edge prints on mugs, apparel & promotional items. Permanent, vibrant results. Call (647) 685-6286.",
   keywords: "sublimation printing Canada, custom mugs, photo printing, all over print, sublimation apparel, promotional items printing",
 };
 
@@ -173,7 +173,7 @@ export default function SublimationPage() {
         ]}
         ctaButtons={[
           { text: "Get Sublimation Quote", href: "/contact", variant: "default" },
-          { text: "Call: 647-685-6286", href: "tel:6476856286", variant: "outline" },
+          { text: "Call: (647) 685-6286", href: "tel:6476856286", variant: "outline" },
         ]}
       />
 
@@ -472,7 +472,7 @@ export default function SublimationPage() {
         description="Get photo-quality, permanent prints on your items today"
         primaryButton={{ label: "Get Your Sublimation Quote", href: "/contact" }}
         secondaryButton={{
-          label: "Call 647-685-6286",
+          label: "Call (647) 685-6286",
           href: "tel:6476856286",
           variant: "outline",
           isPhone: true,

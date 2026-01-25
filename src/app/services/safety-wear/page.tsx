@@ -143,7 +143,7 @@ export default function SafetyWearPage() {
                 size="lg"
                 className="border-2 border-orange-600 bg-transparent px-8 py-4 text-lg font-bold text-orange-500 hover:bg-orange-600 hover:text-white"
               >
-                <a href="tel:6476856286">Call: 647-685-6286</a>
+                <a href="tel:6476856286">Call: (647) 685-6286</a>
               </Button>
             </div>
           </div>
@@ -313,7 +313,7 @@ export default function SafetyWearPage() {
         title="Ready to Outfit Your Team?"
         description="Get compliant safety wear with your company branding today"
         primaryButton={{ label: "Get Safety Wear Quote", href: "/contact" }}
-        secondaryButton={{ label: "Call 647-685-6286", href: "tel:6476856286", variant: "outline", isPhone: true }}
+        secondaryButton={{ label: "Call (647) 685-6286", href: "tel:6476856286", variant: "outline", isPhone: true }}
       />
     </>
   );

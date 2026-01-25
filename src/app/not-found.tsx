@@ -98,7 +98,7 @@ export default function NotFound() {
                 className="flex items-center justify-center gap-2 text-white hover:text-red-500"
               >
                 <Phone className="h-4 w-4" />
-                647-685-6286
+                (647) 685-6286
               </a>
               <a
                 href="mailto:printguys.ca@gmail.com"

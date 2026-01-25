@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Phone, Mail, MessageSquare, Send, ChevronDown } from "lucide-react"
+import { Phone, Mail, MessageSquare, Send, MapPin, Clock } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -313,41 +313,70 @@ export default function ContactPage() {
 
               {/* Contact Methods */}
               <div className="mb-8 space-y-6">
-                <div className="rounded-xl border-2 border-red-600 bg-black p-6">
-                  <div className="mb-4 flex items-center">
-                    <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg bg-red-600">
+                {/* Location */}
+                <a
+                  href="https://maps.google.com/?q=91+Peelar+Rd,+Concord,+ON+L4K+1A3"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block rounded-xl border-2 border-red-600 bg-black p-6 hover:bg-gray-900 transition-colors"
+                >
+                  <div className="flex items-start">
+                    <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg bg-red-600 flex-shrink-0">
+                      <MapPin className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Visit Us</h3>
+                      <p className="font-semibold text-red-500">91 Peelar Rd</p>
+                      <p className="text-gray-300">Concord, ON L4K 1A3</p>
+                      <p className="text-gray-400 text-sm mt-1">Click for directions</p>
+                    </div>
+                  </div>
+                </a>
+
+                {/* Phone */}
+                <a
+                  href="tel:6476856286"
+                  className="block rounded-xl border border-gray-700 bg-black p-6 hover:bg-gray-900 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-700">
                       <Phone className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">Phone Support</h3>
-                      <p className="font-semibold text-red-500">647-685-6286</p>
-                      <p className="text-gray-400">Mon-Fri 9am-6pm EST</p>
+                      <h3 className="text-xl font-bold text-white">Phone</h3>
+                      <p className="font-semibold text-red-500">(647) 685-6286</p>
+                      <p className="text-gray-400">Mon-Sat 9am-6pm EST</p>
                     </div>
                   </div>
-                </div>
+                </a>
 
-                <div className="rounded-xl border border-gray-700 bg-black p-6">
-                  <div className="mb-4 flex items-center">
+                {/* Email */}
+                <a
+                  href="mailto:printguys.ca@gmail.com"
+                  className="block rounded-xl border border-gray-700 bg-black p-6 hover:bg-gray-900 transition-colors"
+                >
+                  <div className="flex items-center">
                     <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-700">
                       <Mail className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">Email Support</h3>
+                      <h3 className="text-xl font-bold text-white">Email</h3>
                       <p className="text-gray-300">printguys.ca@gmail.com</p>
                       <p className="text-gray-400">Response within 24 hours</p>
                     </div>
                   </div>
-                </div>
+                </a>
 
+                {/* Hours */}
                 <div className="rounded-xl border border-gray-700 bg-black p-6">
-                  <div className="mb-4 flex items-center">
+                  <div className="flex items-center">
                     <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-700">
-                      <MessageSquare className="h-6 w-6 text-white" />
+                      <Clock className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">Live Chat</h3>
-                      <p className="text-gray-300">Available on website</p>
-                      <p className="text-gray-400">Mon-Fri 9am-6pm EST</p>
+                      <h3 className="text-xl font-bold text-white">Business Hours</h3>
+                      <p className="text-gray-300">Monday - Saturday: 9am - 6pm</p>
+                      <p className="text-gray-400">Sunday: Closed</p>
                     </div>
                   </div>
                 </div>

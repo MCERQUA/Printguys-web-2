@@ -13,7 +13,7 @@ export function ContactBanner() {
               className="hover:underline font-bold flex items-center gap-1"
             >
               <Phone className="w-4 h-4" />
-              647-685-6286
+              (647) 685-6286
             </Link>
             <span className="hidden sm:inline">|</span>
             <Link

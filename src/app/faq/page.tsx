@@ -114,7 +114,7 @@ export default function FAQPage() {
                   >
                     <Link href="tel:6476856286">
                       <Phone className="mr-2 h-5 w-5" />
-                      Call: 647-685-6286
+                      Call: (647) 685-6286
                     </Link>
                   </Button>
                   <Button

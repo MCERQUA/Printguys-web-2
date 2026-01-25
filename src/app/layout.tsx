@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | PrintGuys",
   },
   description:
-    "Premium custom printing services including DTF transfers, screen printing, embroidery, sublimation, and more. Fast turnaround, no minimums. Serving Toronto, GTA, and all of Canada.",
+    "Premium custom printing services including DTF transfers, screen printing, embroidery, sublimation, and more. Fast turnaround, no minimums. Located in Vaughan, serving Toronto, GTA, and all of Canada.",
   keywords: [
     "DTF printing",
     "heat transfers",
@@ -31,7 +31,9 @@ export const metadata: Metadata = {
     "embroidery",
     "sublimation",
     "custom apparel",
+    "Vaughan printing",
     "Toronto printing",
+    "Concord Ontario printing",
     "Canada printing",
     "DTF transfers",
     "custom t-shirts",

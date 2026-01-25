@@ -19,7 +19,7 @@ export function CTASection({
   title = "Ready to Start Your Project?",
   description = "Get in touch with our team for a custom quote on your next order",
   primaryButton = { label: "Get Quote", href: "/contact" },
-  secondaryButton = { label: "Call 647-685-6286", href: "tel:6476856286", variant: "outline", isPhone: true },
+  secondaryButton = { label: "Call (647) 685-6286", href: "tel:6476856286", variant: "outline", isPhone: true },
 }: CTASectionProps) {
   return (
     <section className="bg-zinc-900 py-16">
