@@ -1,0 +1,775 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  BUSINESS
+  ENTERPRISE
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum PrintMethod {
+  DTF
+  SCREEN
+  EMBROIDERY
+  SUBLIMATION
+  UV_DTF
+  VINYL
+  THREE_D
+  NFC
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIAL
+  REFUNDED
+  FAILED
+}
+
+enum FulfillmentStatus {
+  UNFULFILLED
+  PARTIAL
+  FULFILLED
+  CANCELLED
+}
+
+enum ProductionStatus {
+  PENDING
+  IN_DESIGN
+  IN_PRODUCTION
+  QUALITY_CHECK
+  READY
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  IN_PRODUCTION
+  QUALITY_CHECK
+  READY_TO_SHIP
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum TransactionType {
+  CHARGE
+  REFUND
+  PARTIAL_REFUND
+}
+
+enum DesignFileType {
+  ORIGINAL
+  PRINT_READY
+  PREVIEW
+  THUMBNAIL
+}
+
+enum AIGenerationType {
+  DESIGN
+  LOGO
+  BACKGROUND_REMOVAL
+  UPSCALE
+  AVATAR
+}
+
+enum AIGenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum NFCContentType {
+  URL
+  VCARD
+  TEXT
+  WIFI
+  DYNAMIC
+  AR_TRIGGER
+}
+
+enum ThreeDPrintStatus {
+  QUOTED
+  APPROVED
+  PRINTING
+  POST_PROCESSING
+  QUALITY_CHECK
+  READY
+  SHIPPED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
+
+enum PromoType {
+  PERCENTAGE
+  FIXED
+  FREE_SHIPPING
+}
+
+// ============================================================================
+// USER & AUTHENTICATION (Clerk Integration)
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique
+  email         String    @unique
+  firstName     String?
+  lastName      String?
+  phone         String?
+  company       String?
+  avatar        String?
+
+  // Subscription
+  subscriptionTier  SubscriptionTier @default(FREE)
+  subscriptionId    String?
+  aiCredits         Int              @default(0)
+
+  // Relationships
+  addresses     Address[]
+  orders        Order[]
+  designs       Design[]
+  carts         Cart[]
+  nfcTags       NFCTag[]
+  subscriptions Subscription[]
+
+  // Metadata
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  @@index([email])
+  @@index([clerkId])
+  @@map("users")
+}
+
+// ============================================================================
+// ADDRESSES
+// ============================================================================
+
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type        AddressType @default(SHIPPING)
+  isDefault   Boolean  @default(false)
+
+  firstName   String
+  lastName    String
+  company     String?
+  address1    String
+  address2    String?
+  city        String
+  province    String
+  postalCode  String
+  country     String   @default("CA")
+  phone       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      Order[]  @relation("ShippingAddress")
+  billingOrders Order[] @relation("BillingAddress")
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ============================================================================
+// PRODUCTS & CATALOG
+// ============================================================================
+
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String   @db.Text
+  shortDescription String?
+
+  // Categorization
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  tags            String[]
+
+  // Pricing
+  basePrice       Decimal  @db.Decimal(10, 2)
+
+  // Inventory
+  trackInventory  Boolean  @default(false)
+  inventoryCount  Int?
+
+  // Media
+  images          ProductImage[]
+  threeDModelUrl  String?
+
+  // Print options
+  printMethods    PrintMethod[]
+
+  // Status
+  status          ProductStatus @default(DRAFT)
+  featured        Boolean       @default(false)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Relationships
+  variants        ProductVariant[]
+  cartItems       CartItem[]
+  orderItems      OrderItem[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([status])
+  @@map("products")
+}
+
+model ProductVariant {
+  id          String  @id @default(cuid())
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  name        String
+  sku         String  @unique
+  price       Decimal @db.Decimal(10, 2)
+  compareAt   Decimal? @db.Decimal(10, 2)
+
+  // Options (size, color, etc.)
+  options     Json    // { size: "L", color: "Black" }
+
+  // Inventory
+  inventoryCount Int?
+  allowBackorder Boolean @default(false)
+
+  // Media
+  imageUrl    String?
+
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([productId])
+  @@index([sku])
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  url       String
+  alt       String?
+  position  Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  parentId    String?
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([parentId])
+  @@map("categories")
+}
+
+// ============================================================================
+// SHOPPING CART
+// ============================================================================
+
+model Cart {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  sessionId   String
+
+  items       CartItem[]
+
+  // Calculated totals (cached)
+  subtotal    Decimal  @db.Decimal(10, 2) @default(0)
+  total       Decimal  @db.Decimal(10, 2) @default(0)
+
+  promoCode   String?
+  discount    Decimal  @db.Decimal(10, 2) @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime
+
+  @@index([userId])
+  @@index([sessionId])
+  @@map("carts")
+}
+
+model CartItem {
+  id          String  @id @default(cuid())
+  cartId      String
+  cart        Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  variantId   String
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+
+  quantity    Int
+
+  // Customization
+  customization Json?   // Print method, design placement, etc.
+  designId      String?
+  design        Design? @relation(fields: [designId], references: [id])
+
+  // Pricing
+  unitPrice   Decimal @db.Decimal(10, 2)
+  printPrice  Decimal @db.Decimal(10, 2) @default(0)
+  totalPrice  Decimal @db.Decimal(10, 2)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([cartId])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+// ============================================================================
+// ORDERS
+// ============================================================================
+
+model Order {
+  id            String   @id @default(cuid())
+  orderNumber   String   @unique
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+
+  // Customer info
+  email         String
+  phone         String?
+
+  // Addresses
+  shippingAddressId String
+  shippingAddress   Address @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+  billingAddressId  String
+  billingAddress    Address @relation("BillingAddress", fields: [billingAddressId], references: [id])
+
+  // Items
+  items         OrderItem[]
+
+  // Financials
+  subtotal      Decimal @db.Decimal(10, 2)
+  discount      Decimal @db.Decimal(10, 2) @default(0)
+  shipping      Decimal @db.Decimal(10, 2)
+  tax           Decimal @db.Decimal(10, 2)
+  total         Decimal @db.Decimal(10, 2)
+
+  // Payment
+  paymentStatus PaymentStatus @default(PENDING)
+  stripePaymentIntentId String?
+  transactions  Transaction[]
+
+  // Fulfillment
+  fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
+  fulfillments      Fulfillment[]
+
+  // Production
+  productionStatus ProductionStatus @default(PENDING)
+  productionNotes  String?
+
+  // Shipping
+  shippingMethod  String?
+  trackingNumber  String?
+  trackingUrl     String?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+
+  // Status
+  status          OrderStatus @default(PENDING)
+  cancelledAt     DateTime?
+  cancelReason    String?
+
+  // Notes
+  notes           OrderNote[]
+  internalNotes   String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([orderNumber])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  variantId   String
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+
+  quantity    Int
+
+  // Snapshot at time of order
+  name        String
+  sku         String
+  options     Json?
+
+  // Customization
+  customization Json?
+  designId      String?
+  design        Design? @relation(fields: [designId], references: [id])
+
+  // Pricing
+  unitPrice   Decimal @db.Decimal(10, 2)
+  printPrice  Decimal @db.Decimal(10, 2)
+  totalPrice  Decimal @db.Decimal(10, 2)
+
+  // Files
+  designFileUrl String?
+  proofFileUrl  String?
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+
+  type        TransactionType
+  amount      Decimal  @db.Decimal(10, 2)
+  currency    String   @default("CAD")
+
+  // Stripe
+  stripeId    String?
+  status      String
+
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@map("transactions")
+}
+
+model Fulfillment {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+
+  trackingNumber String?
+  trackingUrl    String?
+  carrier        String?
+
+  items       Json     // Array of { orderItemId, quantity }
+
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orderId])
+  @@map("fulfillments")
+}
+
+model OrderNote {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+
+  content   String   @db.Text
+  isInternal Boolean @default(true)
+  authorId  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@map("order_notes")
+}
+
+// ============================================================================
+// DESIGNS
+// ============================================================================
+
+model Design {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  name        String
+  description String?
+
+  // Design data
+  canvasData  Json?    // Fabric.js/Konva.js canvas state
+  thumbnail   String?  // Preview image
+
+  // Files
+  files       DesignFile[]
+
+  // AI generation
+  aiGenerated Boolean  @default(false)
+  aiPrompt    String?  @db.Text
+
+  // Metadata
+  width       Int?
+  height      Int?
+  colorCount  Int?
+
+  // Status
+  isTemplate  Boolean  @default(false)
+  isPublic    Boolean  @default(false)
+
+  // Relationships
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@map("designs")
+}
+
+model DesignFile {
+  id        String   @id @default(cuid())
+  designId  String
+  design    Design   @relation(fields: [designId], references: [id], onDelete: Cascade)
+
+  type      DesignFileType
+  url       String
+  filename  String
+  size      Int      // bytes
+  mimeType  String
+
+  createdAt DateTime @default(now())
+
+  @@index([designId])
+  @@map("design_files")
+}
+
+// ============================================================================
+// AI USAGE
+// ============================================================================
+
+model AIGeneration {
+  id          String   @id @default(cuid())
+  userId      String
+
+  type        AIGenerationType
+  prompt      String   @db.Text
+  parameters  Json?
+
+  // Results
+  status      AIGenerationStatus
+  resultUrls  String[]
+  error       String?
+
+  // Credits
+  creditsUsed Int
+
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("ai_generations")
+}
+
+// ============================================================================
+// NFC & 3D
+// ============================================================================
+
+model NFCTag {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  name        String
+  tagId       String   @unique  // Physical NFC ID
+
+  // Content
+  contentType NFCContentType
+  content     Json
+
+  // Analytics
+  totalScans  Int      @default(0)
+  lastScanned DateTime?
+
+  // Status
+  active      Boolean  @default(true)
+
+  // Related order
+  orderId     String?
+
+  scans       NFCTagScan[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tagId])
+  @@map("nfc_tags")
+}
+
+model NFCTagScan {
+  id        String   @id @default(cuid())
+  tagId     String
+  tag       NFCTag   @relation(fields: [tagId], references: [id])
+
+  // Context
+  userAgent String?
+  ip        String?
+  city      String?
+  country   String?
+  device    String?
+
+  scannedAt DateTime @default(now())
+
+  @@index([tagId])
+  @@index([scannedAt])
+  @@map("nfc_tag_scans")
+}
+
+model ThreeDPrintJob {
+  id          String   @id @default(cuid())
+  userId      String
+  orderId     String?
+
+  // File
+  fileUrl     String
+  fileType    String   // STL, OBJ, etc.
+  volume      Decimal  @db.Decimal(10, 2)  // cubic cm
+  dimensions  Json     // { x, y, z }
+
+  // Options
+  material    String
+  finish      String
+  color       String?
+  quantity    Int
+
+  // Pricing
+  quotedPrice Decimal  @db.Decimal(10, 2)
+
+  // Status
+  status      ThreeDPrintStatus
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@map("three_d_print_jobs")
+}
+
+// ============================================================================
+// SUBSCRIPTIONS
+// ============================================================================
+
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  tier          SubscriptionTier
+  stripeSubscriptionId String?
+  stripePriceId String?
+
+  status        SubscriptionStatus
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([stripeSubscriptionId])
+  @@map("subscriptions")
+}
+
+// ============================================================================
+// PROMO CODES
+// ============================================================================
+
+model PromoCode {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  type        PromoType
+  value       Decimal  @db.Decimal(10, 2)
+
+  // Conditions
+  minOrderValue Decimal? @db.Decimal(10, 2)
+  maxUses       Int?
+  usesPerCustomer Int?
+  startsAt      DateTime?
+  endsAt        DateTime?
+
+  // Restrictions
+  productIds    String[]
+  categoryIds   String[]
+
+  // Usage
+  usageCount    Int      @default(0)
+
+  active        Boolean  @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([code])
+  @@map("promo_codes")
+}
