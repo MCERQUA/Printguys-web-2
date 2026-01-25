@@ -5,6 +5,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X, ChevronDown, Flame, Zap, Scissors, Palette, Shield, Tag, Ruler } from "lucide-react";
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -194,6 +201,36 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Auth Buttons */}
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button
+                  variant="ghost"
+                  className="text-white hover:text-red-500 hover:bg-transparent"
+                >
+                  Sign In
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button
+                  variant="outline"
+                  className="border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
+                >
+                  Sign Up
+                </Button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "w-10 h-10",
+                  },
+                }}
+              />
+            </SignedIn>
+
             {/* Get Quote Button */}
             <Button
               asChild
@@ -276,6 +313,45 @@ export function Header() {
                       View All Services →
                     </Link>
                   </div>
+                </div>
+
+                {/* Mobile Auth Buttons */}
+                <div className="pt-4 border-t border-gray-700">
+                  <SignedOut>
+                    <div className="flex flex-col gap-3">
+                      <SignInButton mode="modal">
+                        <Button
+                          variant="outline"
+                          className="w-full border-gray-600 text-white hover:bg-gray-800"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Sign In
+                        </Button>
+                      </SignInButton>
+                      <SignUpButton mode="modal">
+                        <Button
+                          variant="outline"
+                          className="w-full border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Sign Up
+                        </Button>
+                      </SignUpButton>
+                    </div>
+                  </SignedOut>
+                  <SignedIn>
+                    <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                      <UserButton
+                        afterSignOutUrl="/"
+                        appearance={{
+                          elements: {
+                            avatarBox: "w-10 h-10",
+                          },
+                        }}
+                      />
+                      <span className="text-white font-medium">My Account</span>
+                    </div>
+                  </SignedIn>
                 </div>
 
                 {/* Mobile Get Quote Button */}

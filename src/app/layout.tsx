@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import "./globals.css";
 import { ContactBanner, Header, Footer } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
@@ -51,30 +53,42 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-4YH4M54622"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-4YH4M54622');
-          `}
-        </Script>
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white min-h-screen flex flex-col`}
-      >
-        <ContactBanner />
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <Toaster position="top-right" />
-      </body>
-    </html>
+    <ClerkProvider
+      appearance={{
+        baseTheme: dark,
+        variables: {
+          colorPrimary: "#ef4444",
+          colorBackground: "#000000",
+          colorInputBackground: "#1f2937",
+          colorInputText: "#ffffff",
+        },
+      }}
+    >
+      <html lang="en" className="dark">
+        <head>
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-4YH4M54622"
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-4YH4M54622');
+            `}
+          </Script>
+        </head>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white min-h-screen flex flex-col`}
+        >
+          <ContactBanner />
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <Toaster position="top-right" />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
