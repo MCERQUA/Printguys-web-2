@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { auth } from '@clerk/nextjs/server';
 import { DesignStudio } from '@/components/design-studio';
-import { Header } from '@/components/layout/Header';
 
 export const metadata: Metadata = {
   title: 'Design Studio | Printguys - Create Custom Apparel',
@@ -17,17 +16,7 @@ export default async function DesignStudioPage() {
   const { userId } = await auth();
   const isLoggedIn = !!userId;
 
-  // Save design handler - will be passed to the client component
-  // In production, this would save to the database via API
-
   return (
-    <>
-      <Header />
-      <main className="min-h-screen bg-black">
-        <DesignStudio
-          isLoggedIn={isLoggedIn}
-        />
-      </main>
-    </>
+    <DesignStudio isLoggedIn={isLoggedIn} />
   );
 }
