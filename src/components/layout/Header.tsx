@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, ChevronDown, Flame, Zap, Scissors, Palette, Shield, Tag, Ruler } from "lucide-react";
+import { Menu, X, ChevronDown, Flame, Zap, Scissors, Palette, Shield, Tag, Ruler, PenTool } from "lucide-react";
 import {
   SignInButton,
   SignUpButton,
@@ -90,6 +90,7 @@ const services = [
 
 const navLinks = [
   { name: "Home", href: "/" },
+  { name: "Design Studio", href: "/design-studio", highlight: true },
   { name: "About", href: "/about" },
   { name: "Pricing", href: "/pricing" },
   { name: "Blog", href: "/blog" },
@@ -129,12 +130,15 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`nav-link transition-colors ${
+                className={`nav-link transition-colors flex items-center gap-1 ${
                   isActive(link.href)
                     ? "text-red-500 font-semibold"
+                    : link.highlight
+                    ? "text-red-400 hover:text-red-300 font-semibold"
                     : "text-white hover:text-red-500"
                 }`}
               >
+                {link.highlight && <PenTool className="w-4 h-4" />}
                 {link.name}
               </Link>
             ))}
@@ -264,12 +268,15 @@ export function Header() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`text-lg font-semibold transition-colors ${
+                    className={`text-lg font-semibold transition-colors flex items-center gap-2 ${
                       isActive(link.href)
                         ? "text-red-500"
+                        : link.highlight
+                        ? "text-red-400 hover:text-red-300"
                         : "text-white hover:text-red-500"
                     }`}
                   >
+                    {link.highlight && <PenTool className="w-5 h-5" />}
                     {link.name}
                   </Link>
                 ))}
