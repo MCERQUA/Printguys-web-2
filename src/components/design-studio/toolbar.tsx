@@ -63,7 +63,7 @@ export const DesignStudioToolbar: React.FC<DesignStudioToolbarProps> = ({
 
   return (
     <motion.div
-      className={`fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[calc(100vw-2rem)] bg-gray-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-1.5 sm:p-3 rounded-xl sm:rounded-2xl flex items-center justify-between sm:justify-start gap-1 sm:gap-3 z-30 transition-all duration-300 ${
+      className={`fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] bg-gray-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-1.5 sm:p-3 rounded-xl sm:rounded-2xl flex items-center justify-between sm:justify-start gap-1 sm:gap-3 z-30 transition-all duration-300 overflow-x-auto ${
         isSidebarOpen ? 'lg:translate-x-[calc(-50%+10rem)]' : ''
       }`}
       initial={{ y: 100, opacity: 0 }}
@@ -234,12 +234,27 @@ export const DesignStudioToolbar: React.FC<DesignStudioToolbarProps> = ({
       <div className="w-px h-6 sm:h-8 bg-white/10 shrink-0" />
 
       {/* Color Selector */}
-      <div className="flex items-center gap-1 shrink-0">
-        {PRODUCT_COLORS.map((color) => (
+      <div className="flex items-center gap-1 shrink-0 min-w-0">
+        {PRODUCT_COLORS.slice(0, 4).map((color) => (
           <motion.button
             key={color.value}
             onClick={() => onChangeColor(color.value)}
-            className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full border-2 transition-all ${
+            className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-all shrink-0 ${
+              productColor === color.value
+                ? 'border-red-500 scale-110'
+                : 'border-white/20 hover:border-white/40'
+            }`}
+            style={{ backgroundColor: color.hex }}
+            whileTap={{ scale: 0.9 }}
+            title={color.label}
+          />
+        ))}
+        {/* Show remaining colors only on larger screens */}
+        {PRODUCT_COLORS.slice(4).map((color) => (
+          <motion.button
+            key={color.value}
+            onClick={() => onChangeColor(color.value)}
+            className={`hidden md:flex w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-all shrink-0 ${
               productColor === color.value
                 ? 'border-red-500 scale-110'
                 : 'border-white/20 hover:border-white/40'
