@@ -233,15 +233,15 @@ export const DesignStudioToolbar: React.FC<DesignStudioToolbarProps> = ({
       {/* Divider */}
       <div className="w-px h-6 sm:h-8 bg-white/10 shrink-0" />
 
-      {/* Color Selector */}
-      <div className="flex items-center gap-1 shrink-0 min-w-0">
+      {/* Color Selector - fixed container with padding for scaled items */}
+      <div className="flex items-center gap-1.5 shrink-0 p-1">
         {PRODUCT_COLORS.slice(0, 4).map((color) => (
           <motion.button
             key={color.value}
             onClick={() => onChangeColor(color.value)}
-            className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-all shrink-0 ${
+            className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-all flex-none ${
               productColor === color.value
-                ? 'border-red-500 scale-110'
+                ? 'border-red-500 ring-2 ring-red-500/50 ring-offset-1 ring-offset-gray-900'
                 : 'border-white/20 hover:border-white/40'
             }`}
             style={{ backgroundColor: color.hex }}
@@ -254,9 +254,9 @@ export const DesignStudioToolbar: React.FC<DesignStudioToolbarProps> = ({
           <motion.button
             key={color.value}
             onClick={() => onChangeColor(color.value)}
-            className={`hidden md:flex w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-all shrink-0 ${
+            className={`hidden md:flex w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-all flex-none ${
               productColor === color.value
-                ? 'border-red-500 scale-110'
+                ? 'border-red-500 ring-2 ring-red-500/50 ring-offset-1 ring-offset-gray-900'
                 : 'border-white/20 hover:border-white/40'
             }`}
             style={{ backgroundColor: color.hex }}
