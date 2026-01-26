@@ -63,7 +63,7 @@ export const DesignStudioToolbar: React.FC<DesignStudioToolbarProps> = ({
 
   return (
     <motion.div
-      className={`fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] bg-gray-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-1.5 sm:p-3 rounded-xl sm:rounded-2xl flex items-center justify-between sm:justify-start gap-1 sm:gap-3 z-30 transition-all duration-300 overflow-x-auto ${
+      className={`fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 w-[calc(100vw-1rem)] max-w-fit bg-gray-900/95 backdrop-blur-xl border border-white/10 shadow-2xl p-1.5 sm:p-3 rounded-xl sm:rounded-2xl flex items-center gap-1 sm:gap-2 z-30 transition-all duration-300 ${
         isSidebarOpen ? 'lg:translate-x-[calc(-50%+10rem)]' : ''
       }`}
       initial={{ y: 100, opacity: 0 }}
@@ -74,7 +74,7 @@ export const DesignStudioToolbar: React.FC<DesignStudioToolbarProps> = ({
       }}
     >
       {/* Product Type Selector */}
-      <div className="relative shrink-0">
+      <div className="relative shrink-0 overflow-visible">
         <motion.button
           onClick={() => setShowProductMenu(!showProductMenu)}
           className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs sm:text-sm font-semibold transition-colors"
@@ -89,7 +89,7 @@ export const DesignStudioToolbar: React.FC<DesignStudioToolbarProps> = ({
         <AnimatePresence>
           {showProductMenu && (
             <motion.div
-              className="absolute bottom-full left-0 mb-2 bg-gray-900 border border-white/10 rounded-lg shadow-xl overflow-hidden min-w-[140px]"
+              className="absolute bottom-full left-0 mb-2 bg-gray-900 border border-white/10 rounded-lg shadow-xl min-w-[140px] z-50"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
