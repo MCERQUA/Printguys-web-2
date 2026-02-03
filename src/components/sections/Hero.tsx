@@ -27,7 +27,7 @@ export interface HeroProps {
 
 export function Hero({
   title = "Professional DTF Printing & Custom Services",
-  subtitle = "Canada's Premier DTF Heat Transfer Specialists | No Minimum Orders",
+  subtitle = "Custom Printed Merch and company apparel in vaughan -no minimums.",
   stats = [
     { value: "2-5 Days", label: "Fast Turnaround" },
     { value: "$0.038/sq\"", label: "DTF Transfer Pricing" },
