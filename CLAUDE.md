@@ -60,3 +60,20 @@ Netlify caches `node_modules`, which means Prisma Client doesn't regenerate auto
 | `Module not found: @prisma/client` | Run `npm install` then `prisma generate` |
 | ESLint errors | Fix or add `ignoreDuringBuilds: true` in next.config |
 | Type errors | Run `npx tsc --noEmit` locally first |
+| API returns empty on Netlify | Don't hardcode `localhost` - use headers to get host |
+
+## Server Components: Fetching API Routes
+
+**NEVER** hardcode `localhost` for server-side API fetches:
+
+```typescript
+// BAD - fails on Netlify
+const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+
+// GOOD - uses request headers
+const { headers } = await import("next/headers");
+const headersList = await headers();
+const host = headersList.get("host") || "localhost:3000";
+const protocol = headersList.get("x-forwarded-proto") || "http";
+const baseUrl = `${protocol}://${host}`;
+```
