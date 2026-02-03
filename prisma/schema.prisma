@@ -773,3 +773,174 @@ model PromoCode {
   @@index([code])
   @@map("promo_codes")
 }
+
+// ============================================================================
+// CONTACT FORM
+// ============================================================================
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  service   String?
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("contact_submissions")
+}
+
+// ============================================================================
+// BLANK PRODUCTS CATALOG (Supplier Items)
+// ============================================================================
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String   // "Sanmar Canada", "S&S Activewear"
+  code        String   @unique // "SANMAR", "SS"
+  website     String?
+  apiUrl      String?
+  logoUrl     String?
+  isActive    Boolean  @default(true)
+
+  categories  BlankCategory[]
+  products    BlankProduct[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("suppliers")
+}
+
+model BlankCategory {
+  id          String   @id @default(cuid())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  name        String   // "T-Shirts & Activewear"
+  nameFr      String?  // French name
+  slug        String   @unique
+  description String?
+  imageUrl    String?
+  position    Int      @default(0)
+
+  products    BlankProduct[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([supplierId])
+  @@index([slug])
+  @@map("blank_categories")
+}
+
+model BlankProduct {
+  id              String   @id @default(cuid())
+  supplierId      String
+  supplier        Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  categoryId      String
+  category        BlankCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  // Product identification
+  styleNumber     String   // "1466" - Supplier's style number
+  sku             String   @unique // "SANMAR-1466" - Our unique SKU
+  slug            String   @unique
+
+  // Names & descriptions
+  name            String   // "COMFORT COLORS® LIGHTWEIGHT CREWNECK SWEATSHIRT"
+  nameFr          String?  // French name
+  description     String   @db.Text
+  descriptionFr   String?  @db.Text
+  shortDescription String?
+
+  // Brand
+  brand           String   // "Comfort Colors®"
+  brandFr         String?
+
+  // Available options
+  availableSizes  String[] // ["S", "M", "L", "XL", "2XL", "3XL"]
+  availableColors Json     // [{name: "Black", hex: "#25282A", pantone: "426C"}, ...]
+
+  // Pricing (base/starting prices)
+  msrp            Decimal  @db.Decimal(10, 2)
+  priceMin        Decimal  @db.Decimal(10, 2) // Lowest variant price
+  priceMax        Decimal  @db.Decimal(10, 2) // Highest variant price
+
+  // Media
+  primaryImageUrl String?
+  images          String[] // Array of image URLs
+
+  // Print compatibility
+  printMethods    PrintMethod[]
+
+  // Features/tags
+  isNew           Boolean  @default(false)
+  isFeatured      Boolean  @default(false)
+  tags            String[]
+
+  // Metadata from supplier
+  supplierData    Json?    // Store any extra supplier data
+
+  // Status
+  isActive        Boolean  @default(true)
+
+  // Relationships
+  variants        BlankProductVariant[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([supplierId])
+  @@index([categoryId])
+  @@index([styleNumber])
+  @@index([slug])
+  @@index([brand])
+  @@index([isActive])
+  @@map("blank_products")
+}
+
+model BlankProductVariant {
+  id              String   @id @default(cuid())
+  productId       String
+  product         BlankProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Variant identification
+  sku             String   @unique // "SANMAR-1466-S-BLK"
+  supplierSku     String   // "37776-2" - Supplier's Product Id
+
+  // Size & Color
+  size            String   // "S", "M", "L", etc.
+  colorName       String   // "Black"
+  colorNameFr     String?  // "Noir"
+  colorCode       String?  // EDI color code
+  hexCode         String?  // "#25282A"
+  pantoneCode     String?  // "426C"
+
+  // Tiered pricing (CAD)
+  msrp            Decimal  @db.Decimal(10, 2)
+  price1          Decimal  @db.Decimal(10, 2) // 1+ piece price
+  priceCase       Decimal  @db.Decimal(10, 2) // Case price
+  price10Case     Decimal  @db.Decimal(10, 2) // 10+ case price
+
+  // Case info
+  caseQuantity    Int      // Quantity per case
+  weight          Decimal  @db.Decimal(10, 4) // Weight per piece (lbs)
+
+  // Media
+  imageUrl        String?
+
+  // Inventory
+  inStock         Boolean  @default(true)
+  stockLevel      Int?     // If we track stock
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([productId])
+  @@index([size])
+  @@index([colorName])
+  @@index([sku])
+  @@map("blank_product_variants")
+}

@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, ChevronDown, Flame, Zap, Scissors, Palette, Shield, Tag, Ruler, PenTool } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Menu, X, ChevronDown, Flame, Zap, Scissors, Palette, Shield, Tag, Ruler, PenTool, ShoppingCart, Shirt } from "lucide-react";
 import {
   SignInButton,
   SignUpButton,
@@ -27,6 +28,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+
+// Lazy load CartDrawer for better performance
+const CartDrawer = dynamic(() => import("@/components/cart").then(mod => ({ default: mod.CartDrawer })), {
+  loading: () => (
+    <Button variant="ghost" size="icon" className="relative">
+      <ShoppingCart className="h-5 w-5" />
+    </Button>
+  ),
+  ssr: false,
+});
 
 const services = [
   {
@@ -90,7 +101,8 @@ const services = [
 
 const navLinks = [
   { name: "Home", href: "/" },
-  { name: "Design Studio", href: "/design-studio", highlight: true },
+  { name: "Shop Blanks", href: "/blanks", highlight: true, icon: Shirt },
+  { name: "Design Studio", href: "/design-studio", highlight: true, icon: PenTool },
   { name: "About", href: "/about" },
   { name: "Pricing", href: "/pricing" },
   { name: "Blog", href: "/blog" },
@@ -115,33 +127,37 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/images/logo/printguys-logo.png"
+              src="/images/logo/printguys-logo.webp"
               alt="PrintGuys Logo"
               width={120}
               height={40}
               className="h-8 w-auto md:h-10"
               priority
+              fetchPriority="high"
             />
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`nav-link transition-colors flex items-center gap-1 ${
-                  isActive(link.href)
-                    ? "text-red-500 font-semibold"
-                    : link.highlight
-                    ? "text-red-400 hover:text-red-300 font-semibold"
-                    : "text-white hover:text-red-500"
-                }`}
-              >
-                {link.highlight && <PenTool className="w-4 h-4" />}
-                {link.name}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`nav-link transition-colors flex items-center gap-1 ${
+                    isActive(link.href)
+                      ? "text-red-500 font-semibold"
+                      : link.highlight
+                      ? "text-red-400 hover:text-red-300 font-semibold"
+                      : "text-white hover:text-red-500"
+                  }`}
+                >
+                  {Icon && <Icon className="w-4 h-4" />}
+                  {link.name}
+                </Link>
+              );
+            })}
 
             {/* Services Dropdown */}
             <DropdownMenu>
@@ -235,6 +251,9 @@ export function Header() {
               />
             </SignedIn>
 
+            {/* Cart */}
+            <CartDrawer />
+
             {/* Get Quote Button */}
             <Button
               asChild
@@ -263,23 +282,26 @@ export function Header() {
                 <SheetTitle className="text-white">Navigation</SheetTitle>
               </SheetHeader>
               <div className="mt-8 flex flex-col space-y-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`text-lg font-semibold transition-colors flex items-center gap-2 ${
-                      isActive(link.href)
-                        ? "text-red-500"
-                        : link.highlight
-                        ? "text-red-400 hover:text-red-300"
-                        : "text-white hover:text-red-500"
-                    }`}
-                  >
-                    {link.highlight && <PenTool className="w-5 h-5" />}
-                    {link.name}
-                  </Link>
-                ))}
+                {navLinks.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`text-lg font-semibold transition-colors flex items-center gap-2 ${
+                        isActive(link.href)
+                          ? "text-red-500"
+                          : link.highlight
+                          ? "text-red-400 hover:text-red-300"
+                          : "text-white hover:text-red-500"
+                      }`}
+                    >
+                      {Icon && <Icon className="w-5 h-5" />}
+                      {link.name}
+                    </Link>
+                  );
+                })}
 
                 {/* Mobile Services List */}
                 <div className="pt-4 border-t border-gray-700">
@@ -359,6 +381,11 @@ export function Header() {
                       <span className="text-white font-medium">My Account</span>
                     </div>
                   </SignedIn>
+                </div>
+
+                {/* Mobile Cart */}
+                <div className="flex items-center justify-center p-3 bg-gray-800 rounded-lg">
+                  <CartDrawer />
                 </div>
 
                 {/* Mobile Get Quote Button */}

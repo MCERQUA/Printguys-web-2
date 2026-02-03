@@ -1,7 +1,15 @@
-// Prisma client - requires database setup
-// TODO: Configure Prisma 7 with prisma.config.ts
-// See: https://pris.ly/d/config-datasource
+import { PrismaClient } from '@prisma/client'
 
-// Placeholder export until database is configured
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const prisma = null as unknown
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  })
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+
+export default prisma
