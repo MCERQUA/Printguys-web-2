@@ -94,10 +94,15 @@ interface BrandsResponse {
   brands: Brand[];
 }
 
-// Fetch helper
+// Fetch helper - uses headers to construct absolute URL for server-side fetch
 async function fetchData<T>(endpoint: string): Promise<T | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    const host = headersList.get("host") || "localhost:3000";
+    const protocol = headersList.get("x-forwarded-proto") || "http";
+    const baseUrl = `${protocol}://${host}`;
+
     const res = await fetch(`${baseUrl}${endpoint}`, {
       cache: "no-store",
     });
