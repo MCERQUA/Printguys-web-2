@@ -17,6 +17,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { BreadcrumbSchema } from "@/components/seo/schema-markup";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Shop Blank Apparel | Printguys - T-Shirts, Hoodies, Polos & More",
@@ -94,23 +95,125 @@ interface BrandsResponse {
   brands: Brand[];
 }
 
-// Fetch helper - uses headers to construct absolute URL for server-side fetch
-async function fetchData<T>(endpoint: string): Promise<T | null> {
-  try {
-    const { headers } = await import("next/headers");
-    const headersList = await headers();
-    const host = headersList.get("host") || "localhost:3000";
-    const protocol = headersList.get("x-forwarded-proto") || "http";
-    const baseUrl = `${protocol}://${host}`;
+// Direct database queries for server component
+async function getProducts(params: {
+  search?: string;
+  category?: string;
+  brand?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  page?: string;
+}) {
+  const page = parseInt(params.page || "1", 10);
+  const limit = 24;
+  const skip = (Math.max(page, 1) - 1) * limit;
 
-    const res = await fetch(`${baseUrl}${endpoint}`, {
-      cache: "no-store",
+  // Build where clause
+  const where: Record<string, unknown> = { isActive: true };
+
+  if (params.category) {
+    const categoryRecord = await prisma.blankCategory.findFirst({
+      where: { OR: [{ id: params.category }, { slug: params.category }] },
     });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
+    if (categoryRecord) where.categoryId = categoryRecord.id;
   }
+
+  if (params.brand) {
+    where.brand = { contains: params.brand, mode: "insensitive" };
+  }
+
+  if (params.search) {
+    where.OR = [
+      { name: { contains: params.search, mode: "insensitive" } },
+      { description: { contains: params.search, mode: "insensitive" } },
+      { brand: { contains: params.search, mode: "insensitive" } },
+      { styleNumber: { contains: params.search, mode: "insensitive" } },
+    ];
+  }
+
+  if (params.minPrice) {
+    const min = parseFloat(params.minPrice);
+    if (!isNaN(min)) where.priceMin = { gte: min };
+  }
+
+  if (params.maxPrice) {
+    const max = parseFloat(params.maxPrice);
+    if (!isNaN(max)) where.priceMax = { lte: max };
+  }
+
+  const [products, totalCount] = await Promise.all([
+    prisma.blankProduct.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        brand: true,
+        primaryImageUrl: true,
+        priceMin: true,
+        priceMax: true,
+        isNew: true,
+        isFeatured: true,
+        styleNumber: true,
+        category: { select: { id: true, name: true, slug: true } },
+      },
+      orderBy: [{ isFeatured: "desc" }, { isNew: "desc" }, { name: "asc" }],
+      skip,
+      take: limit,
+    }),
+    prisma.blankProduct.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return {
+    products: products.map((p) => ({
+      ...p,
+      priceMin: Number(p.priceMin),
+      priceMax: Number(p.priceMax),
+    })),
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
+}
+
+async function getCategories() {
+  const categories = await prisma.blankCategory.findMany({
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      _count: { select: { products: { where: { isActive: true } } } },
+    },
+    orderBy: [{ position: "asc" }, { name: "asc" }],
+  });
+
+  return categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    productCount: c._count.products,
+  }));
+}
+
+async function getBrands() {
+  const brands = await prisma.blankProduct.groupBy({
+    by: ["brand"],
+    where: { isActive: true },
+    _count: { id: true },
+    orderBy: { brand: "asc" },
+  });
+
+  return brands.map((b) => ({
+    name: b.brand,
+    productCount: b._count.id,
+  }));
 }
 
 // Search params interface
@@ -561,33 +664,15 @@ export default async function BlanksPage({
 }) {
   const params = await searchParams;
 
-  // Build API query string
-  const apiParams = new URLSearchParams();
-  if (params.search) apiParams.set("search", params.search);
-  if (params.category) apiParams.set("category", params.category);
-  if (params.brand) apiParams.set("brand", params.brand);
-  if (params.minPrice) apiParams.set("minPrice", params.minPrice);
-  if (params.maxPrice) apiParams.set("maxPrice", params.maxPrice);
-  if (params.page) apiParams.set("page", params.page);
-
-  // Fetch data in parallel
-  const [blanksData, categoriesData, brandsData] = await Promise.all([
-    fetchData<BlanksResponse>(`/api/blanks?${apiParams.toString()}`),
-    fetchData<CategoriesResponse>("/api/blanks/categories"),
-    fetchData<BrandsResponse>("/api/blanks/brands"),
+  // Fetch data directly from database in parallel
+  const [blanksData, categories, brands] = await Promise.all([
+    getProducts(params),
+    getCategories(),
+    getBrands(),
   ]);
 
-  const products = blanksData?.products || [];
-  const pagination = blanksData?.pagination || {
-    page: 1,
-    limit: 24,
-    totalCount: 0,
-    totalPages: 0,
-    hasNextPage: false,
-    hasPrevPage: false,
-  };
-  const categories = categoriesData?.categories || [];
-  const brands = brandsData?.brands || [];
+  const products = blanksData.products;
+  const pagination = blanksData.pagination;
 
   return (
     <>
