@@ -1,29 +1,32 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import "./globals.css";
 import { ContactBanner, Header, Footer } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { LocalBusinessSchema } from "@/components/seo/schema-markup";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "PrintGuys - Canada's Largest DTF Printer",
+    default: "PrintGuys - Custom Printed Merch & Company Apparel in Vaughan",
     template: "%s | PrintGuys",
   },
   description:
-    "Premium custom printing services including DTF transfers, screen printing, embroidery, sublimation, and more. Fast turnaround, no minimums. Located in Vaughan, serving Toronto, GTA, and all of Canada.",
+    "Custom printed merch and company apparel in Vaughan - no minimums. Premium DTF printing, screen printing, embroidery, and more. Fast turnaround serving Toronto, GTA, and all of Canada.",
   keywords: [
     "DTF printing",
     "heat transfers",
@@ -38,10 +41,13 @@ export const metadata: Metadata = {
     "DTF transfers",
     "custom t-shirts",
     "large format printing",
+    "company apparel",
+    "custom merch",
+    "no minimum orders",
   ],
   openGraph: {
-    title: "PrintGuys - Custom Printing Services",
-    description: "Premium custom printing services in Canada",
+    title: "PrintGuys - Custom Printed Merch & Company Apparel in Vaughan",
+    description: "Custom printed merch and company apparel in Vaughan - no minimums.",
     url: "https://printguys.ca",
     siteName: "PrintGuys",
     locale: "en_CA",
@@ -67,23 +73,11 @@ export default function RootLayout({
       }}
     >
       <html lang="en" className="dark">
-        <head>
-          <Script
-            src="https://www.googletagmanager.com/gtag/js?id=G-4YH4M54622"
-            strategy="afterInteractive"
-          />
-          <Script id="google-analytics" strategy="afterInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-4YH4M54622');
-            `}
-          </Script>
-        </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white min-h-screen flex flex-col`}
         >
+          <LocalBusinessSchema />
+          <GoogleAnalytics />
           <ContactBanner />
           <Header />
           <main className="flex-1">{children}</main>
