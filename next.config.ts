@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "placehold.co",
       },
+      {
+        protocol: "https",
+        hostname: "media.sanmarcanada.com",
+      },
     ],
     // Enable image optimization
     unoptimized: false,
