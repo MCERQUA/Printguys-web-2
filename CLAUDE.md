@@ -62,18 +62,26 @@ Netlify caches `node_modules`, which means Prisma Client doesn't regenerate auto
 | Type errors | Run `npx tsc --noEmit` locally first |
 | API returns empty on Netlify | Don't hardcode `localhost` - use headers to get host |
 
-## Server Components: Fetching API Routes
+## Server Components: Data Fetching
 
-**NEVER** hardcode `localhost` for server-side API fetches:
+**BEST PRACTICE**: Server components should query Prisma directly, NOT fetch API routes:
 
 ```typescript
-// BAD - fails on Netlify
-const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+// BAD - Server component fetching its own API
+const res = await fetch(`${baseUrl}/api/products`);
 
-// GOOD - uses request headers
-const { headers } = await import("next/headers");
-const headersList = await headers();
-const host = headersList.get("host") || "localhost:3000";
-const protocol = headersList.get("x-forwarded-proto") || "http";
-const baseUrl = `${protocol}://${host}`;
+// GOOD - Server component querying database directly
+import { prisma } from "@/lib/prisma";
+
+export default async function Page() {
+  const products = await prisma.blankProduct.findMany({
+    where: { isActive: true },
+  });
+  // ...
+}
 ```
+
+API routes (`/api/*`) are for:
+- Client-side fetches (React Query, SWR, fetch from useEffect)
+- External integrations (webhooks, third-party services)
+- NOT for server components to call themselves
