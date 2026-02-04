@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRight, Shirt, Package } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { Suspense } from 'react'
@@ -35,6 +36,19 @@ interface Category {
   }
 }
 
+// Map database slugs to image file names
+const slugToImage: Record<string, string> = {
+  'sanmar-t-shirts-activewear': 't-shirts-activewear',
+  'sanmar-fleece': 'fleece',
+  'sanmar-polos': 'polos',
+  'sanmar-headwear': 'headwear',
+  'sanmar-bags': 'bags',
+  'sanmar-outerwear': 'outerwear',
+  'sanmar-workwear': 'workwear',
+  'sanmar-woven-shirts': 'woven-shirts',
+  'sanmar-accessories': 'accessories',
+}
+
 // Fetch categories server-side
 async function getCategories() {
   const categories = await prisma.blankCategory.findMany({
@@ -60,74 +74,50 @@ async function getCategories() {
   return categories
 }
 
-// Category image colors (brand-based gradients)
-const categoryGradients: Record<string, string> = {
-  'sanmar-t-shirts-activewear': 'from-red-900 via-black to-zinc-950',
-  'sanmar-fleece': 'from-zinc-900 via-red-950 to-black',
-  'sanmar-polos': 'from-black via-red-900 to-zinc-950',
-  'sanmar-headwear': 'from-red-950 via-zinc-900 to-black',
-  'sanmar-bags': 'from-zinc-950 via-black to-red-900',
-  'sanmar-outerwear': 'from-black via-zinc-900 to-red-950',
-  'sanmar-workwear': 'from-red-900 via-zinc-950 to-black',
-  'sanmar-woven-shirts': 'from-zinc-900 via-black to-red-900',
-  'sanmar-accessories': 'from-red-950 via-black to-zinc-950',
-}
-
-// Background pattern for each category
-const categoryPatterns: Record<string, string> = {
-  'sanmar-t-shirts-activewear': 'T-SHIRTS & ACTIVEWEAR',
-  'sanmar-fleece': 'FLEECE',
-  'sanmar-polos': 'POLOS',
-  'sanmar-headwear': 'HEADWEAR',
-  'sanmar-bags': 'BAGS',
-  'sanmar-outerwear': 'OUTERWEAR',
-  'sanmar-workwear': 'WORKWEAR',
-  'sanmar-woven-shirts': 'WOVEN SHIRTS',
-  'sanmar-accessories': 'ACCESSORIES',
-}
-
 function CategoryCard({ category }: { category: Category }) {
-  const gradient = categoryGradients[category.slug] || 'from-black via-zinc-900 to-black'
-  const pattern = categoryPatterns[category.slug] || category.name.toUpperCase()
+  const imageName = slugToImage[category.slug] || category.slug.replace('sanmar-', '')
+  const imagePath = `/images/blanks/categories/${imageName}.jpg`
 
   return (
     <Link
       href={`/blanks/catalog?category=${category.slug}`}
       className="group relative w-full h-screen overflow-hidden"
     >
-      {/* Background gradient */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
-
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="w-full h-full flex flex-wrap items-center justify-center gap-8 text-9xl font-bold text-white">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <span key={i}>{pattern}</span>
-          ))}
-        </div>
+      {/* Background image with overlay */}
+      <div className="absolute inset-0">
+        <Image
+          src={imagePath}
+          alt={category.name}
+          fill
+          className="object-cover"
+          unoptimized
+          priority={false}
+        />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-500" />
       </div>
 
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center p-8">
-        {/* Category name */}
-        <h2 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white text-center mb-4 group-hover:text-red-500 transition-colors duration-300">
+        {/* Category name with effect */}
+        <h2 className="text-6xl md:text-8xl lg:text-9xl font-light text-white text-center mb-4 tracking-tight group-hover:tracking-wider transition-all duration-500">
           {category.name}
         </h2>
 
-        {/* Product count */}
-        <p className="text-xl md:text-2xl text-gray-400 mb-8">
+        {/* Subtle product count */}
+        <p className="text-lg md:text-xl text-white/60 mb-12 font-light tracking-wide">
           {category._count.products} Products
         </p>
 
         {/* CTA */}
-        <div className="flex items-center gap-3 text-red-500 text-lg font-semibold group-hover:gap-5 transition-all duration-300">
-          Shop Now
-          <ArrowRight className="w-6 h-6" />
+        <div className="flex items-center gap-3 text-white text-lg font-medium tracking-wide group-hover:gap-6 transition-all duration-300">
+          <span className="border-b border-white/30 pb-1">Explore Collection</span>
+          <ArrowRight className="w-5 h-5" />
         </div>
       </div>
 
       {/* Bottom border */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-white/20" />
     </Link>
   )
 }
@@ -135,12 +125,13 @@ function CategoryCard({ category }: { category: Category }) {
 function HeroSection() {
   return (
     <section className="relative h-screen flex flex-col items-center justify-center bg-black overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-950 via-black to-zinc-950">
-        <div className="absolute inset-0 opacity-10">
-          <div className="w-full h-full flex flex-wrap items-center justify-center gap-12 text-8xl font-bold text-red-600">
-            {Array.from({ length: 30 }).map((_, i) => (
-              <span key={i}>PRINTGUYS</span>
+      {/* Subtle animated background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-950 to-black" />
+        <div className="absolute inset-0 opacity-5">
+          <div className="w-full h-full flex flex-wrap items-center justify-center gap-16 text-9xl font-light text-white">
+            {Array.from({ length: 25 }).map((_, i) => (
+              <span key={i} className="opacity-20">PRINTGUYS</span>
             ))}
           </div>
         </div>
@@ -148,45 +139,39 @@ function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 text-center px-4">
-        <div className="inline-flex items-center gap-2 bg-red-600/20 text-red-400 px-6 py-3 rounded-full mb-8">
-          <Shirt className="w-6 h-6" />
-          <span className="text-lg font-semibold">Premium Wholesale Blanks</span>
+        <div className="inline-flex items-center gap-2 text-red-500 px-6 py-3 mb-10 border border-red-500/30">
+          <Shirt className="w-5 h-5" />
+          <span className="text-sm font-medium tracking-widest uppercase">Premium Wholesale Blanks</span>
         </div>
 
-        <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold text-white mb-6">
-          SHOP BLANKS
+        <h1 className="text-7xl md:text-9xl lg:text-[12rem] font-light text-white mb-8 tracking-tighter leading-none">
+          BLANKS
         </h1>
 
-        <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-2xl mx-auto">
-          Quality apparel from top suppliers. Choose your category below.
+        <p className="text-xl md:text-2xl text-white/50 mb-16 max-w-2xl mx-auto font-light">
+          Premium canvas for your creativity
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-6 justify-center">
           <Link
             href="/blanks/catalog"
-            className="inline-flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+            className="inline-flex items-center gap-3 bg-white hover:bg-red-500 text-black hover:text-white px-10 py-5 text-lg font-medium transition-all duration-300"
           >
-            <Package className="w-5 h-5" />
             View All Items
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
 
-        <p className="mt-8 text-gray-500 text-sm">
+        <p className="mt-12 text-white/30 text-sm tracking-widest uppercase">
           Gildan • Bella+Canvas • Next Level • Champion
         </p>
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-500">
-        <span className="text-sm">Scroll to explore</span>
-        <div className="w-6 h-10 border-2 border-gray-600 rounded-full flex items-start justify-center p-2">
-          <div className="w-1 h-2 bg-red-600 rounded-full animate-bounce" />
-        </div>
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-white/40">
+        <span className="text-xs tracking-widest uppercase">Scroll</span>
+        <div className="w-px h-16 bg-gradient-to-b from-white/40 to-transparent" />
       </div>
-
-      {/* Bottom gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
     </section>
   )
 }
@@ -195,7 +180,7 @@ function CategoriesSkeleton() {
   return (
     <div className="space-y-1">
       {[...Array(9)].map((_, i) => (
-        <div key={i} className="w-full h-screen bg-zinc-900 animate-pulse" />
+        <div key={i} className="w-full h-screen bg-zinc-950 animate-pulse" />
       ))}
     </div>
   )
@@ -217,25 +202,25 @@ export default async function BlanksLandingPage() {
       </Suspense>
 
       {/* Bottom CTA */}
-      <section className="relative py-24 bg-black">
+      <section className="relative py-32 bg-black">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-light text-white mb-6 tracking-tight">
             Need Custom Printing?
           </h2>
-          <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-white/50 mb-12 max-w-2xl mx-auto font-light">
             We offer DTF transfers, screen printing, embroidery, and more. Get a quote for your custom apparel project.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+              className="inline-flex items-center gap-2 bg-white hover:bg-red-500 text-black hover:text-white px-10 py-5 text-lg font-medium transition-all duration-300"
             >
               Get a Quote
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/services/dtf"
-              className="inline-flex items-center gap-2 border border-gray-600 hover:bg-zinc-800 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+              className="inline-flex items-center gap-2 border border-white/20 hover:border-white text-white px-10 py-5 text-lg font-medium transition-all duration-300"
             >
               View Services
             </Link>
