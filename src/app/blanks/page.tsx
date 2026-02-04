@@ -1,839 +1,247 @@
-import { Suspense } from "react";
-import { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
-import { Search, Filter, ChevronLeft, ChevronRight, Package, Shirt, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { BreadcrumbSchema } from "@/components/seo/schema-markup";
-import { prisma } from "@/lib/prisma";
+import { Metadata } from 'next'
+import Link from 'next/link'
+import { ArrowRight, Shirt, Package } from 'lucide-react'
+import { prisma } from '@/lib/prisma'
+import { Suspense } from 'react'
 
 export const metadata: Metadata = {
-  title: "Shop Blank Apparel | Printguys - T-Shirts, Hoodies, Polos & More",
-  description:
-    "Browse our catalog of blank apparel from top suppliers. Find premium t-shirts, hoodies, polos, and more from brands like Gildan, Bella+Canvas, and Next Level.",
+  title: 'Shop Blank Apparel | Printguys - Premium Quality Blanks',
+  description: 'Browse our catalog of premium blank apparel by category. T-Shirts, Hoodies, Polos, Headwear, and more from top suppliers.',
   keywords: [
-    "blank apparel",
-    "wholesale clothing",
-    "blank t-shirts",
-    "wholesale hoodies",
-    "custom printing blanks",
-    "Gildan",
-    "Bella Canvas",
-    "Next Level",
+    'blank apparel',
+    'wholesale clothing',
+    'blank t-shirts',
+    'wholesale hoodies',
+    'custom printing blanks',
+    'Gildan',
+    'Bella Canvas',
+    'Next Level',
   ],
   openGraph: {
-    title: "Shop Blank Apparel | Printguys",
-    description:
-      "Browse our catalog of blank apparel from top suppliers. Premium t-shirts, hoodies, polos and more.",
-    type: "website",
-    url: "https://printguys.ca/blanks",
+    title: 'Shop Blank Apparel | Printguys',
+    description: 'Browse our catalog of premium blank apparel by category.',
+    type: 'website',
+    url: 'https://printguys.ca/blanks',
   },
-};
-
-// Types for the API responses
-interface BlankProduct {
-  id: string;
-  name: string;
-  slug: string;
-  brand: string;
-  primaryImageUrl: string | null;
-  priceMin: number;
-  priceMax: number;
-  isNew: boolean;
-  isFeatured: boolean;
-  styleNumber: string | null;
-  category: {
-    id: string;
-    name: string;
-    slug: string;
-  } | null;
 }
 
+// Category type
 interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  productCount: number;
-}
-
-interface Brand {
-  name: string;
-  productCount: number;
-}
-
-interface PaginationInfo {
-  page: number;
-  limit: number;
-  totalCount: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}
-
-interface BlanksResponse {
-  products: BlankProduct[];
-  pagination: PaginationInfo;
-}
-
-interface CategoriesResponse {
-  categories: Category[];
-}
-
-interface BrandsResponse {
-  brands: Brand[];
-}
-
-// Direct database queries for server component
-async function getProducts(params: {
-  search?: string;
-  category?: string;
-  brand?: string;
-  minPrice?: string;
-  maxPrice?: string;
-  page?: string;
-}) {
-  const page = parseInt(params.page || "1", 10);
-  const limit = 24;
-  const skip = (Math.max(page, 1) - 1) * limit;
-
-  // Build where clause
-  const where: Record<string, unknown> = { isActive: true };
-
-  if (params.category) {
-    const categoryRecord = await prisma.blankCategory.findFirst({
-      where: { OR: [{ id: params.category }, { slug: params.category }] },
-    });
-    if (categoryRecord) where.categoryId = categoryRecord.id;
+  id: string
+  name: string
+  slug: string
+  _count: {
+    products: number
   }
-
-  if (params.brand) {
-    where.brand = { contains: params.brand, mode: "insensitive" };
-  }
-
-  if (params.search) {
-    where.OR = [
-      { name: { contains: params.search, mode: "insensitive" } },
-      { description: { contains: params.search, mode: "insensitive" } },
-      { brand: { contains: params.search, mode: "insensitive" } },
-      { styleNumber: { contains: params.search, mode: "insensitive" } },
-    ];
-  }
-
-  if (params.minPrice) {
-    const min = parseFloat(params.minPrice);
-    if (!isNaN(min)) where.priceMin = { gte: min };
-  }
-
-  if (params.maxPrice) {
-    const max = parseFloat(params.maxPrice);
-    if (!isNaN(max)) where.priceMax = { lte: max };
-  }
-
-  const [products, totalCount] = await Promise.all([
-    prisma.blankProduct.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        brand: true,
-        primaryImageUrl: true,
-        priceMin: true,
-        priceMax: true,
-        isNew: true,
-        isFeatured: true,
-        styleNumber: true,
-        category: { select: { id: true, name: true, slug: true } },
-      },
-      orderBy: [{ isFeatured: "desc" }, { isNew: "desc" }, { name: "asc" }],
-      skip,
-      take: limit,
-    }),
-    prisma.blankProduct.count({ where }),
-  ]);
-
-  const totalPages = Math.ceil(totalCount / limit);
-
-  return {
-    products: products.map((p) => ({
-      ...p,
-      priceMin: Number(p.priceMin),
-      priceMax: Number(p.priceMax),
-    })),
-    pagination: {
-      page,
-      limit,
-      totalCount,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    },
-  };
 }
 
+// Fetch categories server-side
 async function getCategories() {
   const categories = await prisma.blankCategory.findMany({
+    where: {
+      supplier: { code: 'SANMAR' },
+      products: { some: { isActive: true } }
+    },
     select: {
       id: true,
       name: true,
       slug: true,
-      _count: { select: { products: { where: { isActive: true } } } },
+      _count: {
+        select: {
+          products: {
+            where: { isActive: true }
+          }
+        }
+      }
     },
-    orderBy: [{ position: "asc" }, { name: "asc" }],
-  });
+    orderBy: { position: 'asc' }
+  })
 
-  return categories.map((c) => ({
-    id: c.id,
-    name: c.name,
-    slug: c.slug,
-    productCount: c._count.products,
-  }));
+  return categories
 }
 
-async function getBrands() {
-  const brands = await prisma.blankProduct.groupBy({
-    by: ["brand"],
-    where: { isActive: true },
-    _count: { id: true },
-    orderBy: { brand: "asc" },
-  });
-
-  return brands.map((b) => ({
-    name: b.brand,
-    productCount: b._count.id,
-  }));
+// Category image colors (brand-based gradients)
+const categoryGradients: Record<string, string> = {
+  'sanmar-t-shirts-activewear': 'from-red-900 via-black to-zinc-950',
+  'sanmar-fleece': 'from-zinc-900 via-red-950 to-black',
+  'sanmar-polos': 'from-black via-red-900 to-zinc-950',
+  'sanmar-headwear': 'from-red-950 via-zinc-900 to-black',
+  'sanmar-bags': 'from-zinc-950 via-black to-red-900',
+  'sanmar-outerwear': 'from-black via-zinc-900 to-red-950',
+  'sanmar-workwear': 'from-red-900 via-zinc-950 to-black',
+  'sanmar-woven-shirts': 'from-zinc-900 via-black to-red-900',
+  'sanmar-accessories': 'from-red-950 via-black to-zinc-950',
 }
 
-// Search params interface
-interface SearchParams {
-  search?: string;
-  category?: string;
-  brand?: string;
-  minPrice?: string;
-  maxPrice?: string;
-  page?: string;
+// Background pattern for each category
+const categoryPatterns: Record<string, string> = {
+  'sanmar-t-shirts-activewear': 'T-SHIRTS & ACTIVEWEAR',
+  'sanmar-fleece': 'FLEECE',
+  'sanmar-polos': 'POLOS',
+  'sanmar-headwear': 'HEADWEAR',
+  'sanmar-bags': 'BAGS',
+  'sanmar-outerwear': 'OUTERWEAR',
+  'sanmar-workwear': 'WORKWEAR',
+  'sanmar-woven-shirts': 'WOVEN SHIRTS',
+  'sanmar-accessories': 'ACCESSORIES',
 }
 
-// Product Card Component
-function ProductCard({ product }: { product: BlankProduct }) {
-  const formatPrice = (min: number, max: number) => {
-    if (min === max) {
-      return `$${min.toFixed(2)}`;
-    }
-    return `$${min.toFixed(2)} - $${max.toFixed(2)}`;
-  };
+function CategoryCard({ category }: { category: Category }) {
+  const gradient = categoryGradients[category.slug] || 'from-black via-zinc-900 to-black'
+  const pattern = categoryPatterns[category.slug] || category.name.toUpperCase()
 
   return (
-    <Link href={`/blanks/${product.slug}`}>
-      <Card className="group bg-zinc-900 border-gray-800 hover:border-red-500/50 transition-all duration-300 overflow-hidden h-full">
-        <div className="relative aspect-square bg-gray-800 overflow-hidden">
-          {product.primaryImageUrl ? (
-            <Image
-              src={product.primaryImageUrl}
-              alt={product.name}
-              fill
-              unoptimized
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Shirt className="w-16 h-16 text-gray-600" />
-            </div>
-          )}
-          {product.isNew && (
-            <Badge className="absolute top-2 left-2 bg-red-600 text-white">
-              New
-            </Badge>
-          )}
-          {product.isFeatured && !product.isNew && (
-            <Badge className="absolute top-2 left-2 bg-amber-600 text-white">
-              Featured
-            </Badge>
-          )}
+    <Link
+      href={`/blanks/catalog?category=${category.slug}`}
+      className="group relative w-full h-screen overflow-hidden"
+    >
+      {/* Background gradient */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
+
+      {/* Subtle pattern overlay */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="w-full h-full flex flex-wrap items-center justify-center gap-8 text-9xl font-bold text-white">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <span key={i}>{pattern}</span>
+          ))}
         </div>
-        <CardContent className="p-4">
-          <p className="text-xs text-gray-400 mb-1">{product.brand}</p>
-          <h3 className="font-medium text-white group-hover:text-red-400 transition-colors line-clamp-2 mb-2">
-            {product.name}
-          </h3>
-          {product.styleNumber && (
-            <p className="text-xs text-gray-500 mb-2">#{product.styleNumber}</p>
-          )}
-          <p className="text-red-500 font-semibold">
-            {formatPrice(product.priceMin, product.priceMax)}
-          </p>
-          {product.category && (
-            <p className="text-xs text-gray-500 mt-2">{product.category.name}</p>
-          )}
-        </CardContent>
-      </Card>
+      </div>
+
+      {/* Content */}
+      <div className="relative h-full flex flex-col items-center justify-center p-8">
+        {/* Category name */}
+        <h2 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white text-center mb-4 group-hover:text-red-500 transition-colors duration-300">
+          {category.name}
+        </h2>
+
+        {/* Product count */}
+        <p className="text-xl md:text-2xl text-gray-400 mb-8">
+          {category._count.products} Products
+        </p>
+
+        {/* CTA */}
+        <div className="flex items-center gap-3 text-red-500 text-lg font-semibold group-hover:gap-5 transition-all duration-300">
+          Shop Now
+          <ArrowRight className="w-6 h-6" />
+        </div>
+      </div>
+
+      {/* Bottom border */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600 to-transparent" />
     </Link>
-  );
+  )
 }
 
-// Filter Sidebar Component
-function FilterSidebar({
-  categories,
-  brands,
-  searchParams,
-}: {
-  categories: Category[];
-  brands: Brand[];
-  searchParams: SearchParams;
-}) {
-  const selectedCategory = searchParams.category || "";
-  const selectedBrand = searchParams.brand || "";
-  const minPrice = searchParams.minPrice || "";
-  const maxPrice = searchParams.maxPrice || "";
-  const searchQuery = searchParams.search || "";
-
-  // Build URL with updated params
-  const buildFilterUrl = (updates: Record<string, string | null>) => {
-    const params = new URLSearchParams();
-
-    // Preserve existing params
-    if (searchQuery && updates.search !== null) params.set("search", updates.search ?? searchQuery);
-    if (selectedCategory && updates.category !== null) params.set("category", updates.category ?? selectedCategory);
-    if (selectedBrand && updates.brand !== null) params.set("brand", updates.brand ?? selectedBrand);
-    if (minPrice && updates.minPrice !== null) params.set("minPrice", updates.minPrice ?? minPrice);
-    if (maxPrice && updates.maxPrice !== null) params.set("maxPrice", updates.maxPrice ?? maxPrice);
-
-    // Apply updates
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null) {
-        params.delete(key);
-      } else if (value) {
-        params.set(key, value);
-      }
-    });
-
-    // Always reset to page 1 when filtering
-    params.delete("page");
-
-    const queryString = params.toString();
-    return queryString ? `/blanks?${queryString}` : "/blanks";
-  };
-
+function HeroSection() {
   return (
-    <div className="space-y-6">
-      {/* Search */}
-      <div>
-        <Label className="text-white mb-2 block">Search</Label>
-        <form action="/blanks" method="GET">
-          {selectedCategory && <input type="hidden" name="category" value={selectedCategory} />}
-          {selectedBrand && <input type="hidden" name="brand" value={selectedBrand} />}
-          {minPrice && <input type="hidden" name="minPrice" value={minPrice} />}
-          {maxPrice && <input type="hidden" name="maxPrice" value={maxPrice} />}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              type="text"
-              name="search"
-              placeholder="Search products..."
-              defaultValue={searchQuery}
-              className="pl-10 bg-zinc-800 border-gray-700 text-white placeholder:text-gray-500"
-            />
+    <section className="relative h-screen flex flex-col items-center justify-center bg-black overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-950 via-black to-zinc-950">
+        <div className="absolute inset-0 opacity-10">
+          <div className="w-full h-full flex flex-wrap items-center justify-center gap-12 text-8xl font-bold text-red-600">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <span key={i}>PRINTGUYS</span>
+            ))}
           </div>
-        </form>
-      </div>
-
-      {/* Categories */}
-      <div>
-        <Label className="text-white mb-3 block">Categories</Label>
-        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-          {categories.map((cat) => (
-            <Link
-              key={cat.id}
-              href={buildFilterUrl({
-                category: selectedCategory === cat.slug ? null : cat.slug,
-              })}
-              className={`flex items-center justify-between py-1.5 px-2 rounded text-sm transition-colors ${
-                selectedCategory === cat.slug
-                  ? "bg-red-600/20 text-red-400"
-                  : "text-gray-300 hover:text-white hover:bg-zinc-800"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedCategory === cat.slug}
-                  className="border-gray-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
-                />
-                {cat.name}
-              </span>
-              <span className="text-gray-500 text-xs">({cat.productCount})</span>
-            </Link>
-          ))}
         </div>
       </div>
 
-      {/* Brands */}
-      <div>
-        <Label className="text-white mb-3 block">Brands</Label>
-        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-          {brands.map((brand) => (
-            <Link
-              key={brand.name}
-              href={buildFilterUrl({
-                brand: selectedBrand === brand.name ? null : brand.name,
-              })}
-              className={`flex items-center justify-between py-1.5 px-2 rounded text-sm transition-colors ${
-                selectedBrand === brand.name
-                  ? "bg-red-600/20 text-red-400"
-                  : "text-gray-300 hover:text-white hover:bg-zinc-800"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedBrand === brand.name}
-                  className="border-gray-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
-                />
-                {brand.name}
-              </span>
-              <span className="text-gray-500 text-xs">({brand.productCount})</span>
-            </Link>
-          ))}
+      {/* Content */}
+      <div className="relative z-10 text-center px-4">
+        <div className="inline-flex items-center gap-2 bg-red-600/20 text-red-400 px-6 py-3 rounded-full mb-8">
+          <Shirt className="w-6 h-6" />
+          <span className="text-lg font-semibold">Premium Wholesale Blanks</span>
         </div>
-      </div>
 
-      {/* Price Range */}
-      <div>
-        <Label className="text-white mb-3 block">Price Range</Label>
-        <form action="/blanks" method="GET" className="space-y-3">
-          {searchQuery && <input type="hidden" name="search" value={searchQuery} />}
-          {selectedCategory && <input type="hidden" name="category" value={selectedCategory} />}
-          {selectedBrand && <input type="hidden" name="brand" value={selectedBrand} />}
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              name="minPrice"
-              placeholder="Min"
-              defaultValue={minPrice}
-              min="0"
-              step="0.01"
-              className="bg-zinc-800 border-gray-700 text-white placeholder:text-gray-500"
-            />
-            <Input
-              type="number"
-              name="maxPrice"
-              placeholder="Max"
-              defaultValue={maxPrice}
-              min="0"
-              step="0.01"
-              className="bg-zinc-800 border-gray-700 text-white placeholder:text-gray-500"
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full bg-red-600 hover:bg-red-700 text-white"
+        <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold text-white mb-6">
+          SHOP BLANKS
+        </h1>
+
+        <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-2xl mx-auto">
+          Quality apparel from top suppliers. Choose your category below.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href="/blanks/catalog"
+            className="inline-flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
           >
-            Apply Price Filter
-          </Button>
-        </form>
-      </div>
-
-      {/* Clear Filters */}
-      {(selectedCategory || selectedBrand || minPrice || maxPrice || searchQuery) && (
-        <Link href="/blanks">
-          <Button
-            variant="outline"
-            className="w-full border-gray-600 text-gray-300 hover:bg-zinc-800 hover:text-white"
-          >
-            <X className="w-4 h-4 mr-2" />
-            Clear All Filters
-          </Button>
-        </Link>
-      )}
-    </div>
-  );
-}
-
-// Pagination Component
-function Pagination({
-  pagination,
-  searchParams,
-}: {
-  pagination: PaginationInfo;
-  searchParams: SearchParams;
-}) {
-  const buildPageUrl = (page: number) => {
-    const params = new URLSearchParams();
-    if (searchParams.search) params.set("search", searchParams.search);
-    if (searchParams.category) params.set("category", searchParams.category);
-    if (searchParams.brand) params.set("brand", searchParams.brand);
-    if (searchParams.minPrice) params.set("minPrice", searchParams.minPrice);
-    if (searchParams.maxPrice) params.set("maxPrice", searchParams.maxPrice);
-    params.set("page", page.toString());
-    return `/blanks?${params.toString()}`;
-  };
-
-  // Generate page numbers to show
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    const { page, totalPages } = pagination;
-
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (page <= 4) {
-        for (let i = 1; i <= 5; i++) pages.push(i);
-        pages.push("...");
-        pages.push(totalPages);
-      } else if (page >= totalPages - 3) {
-        pages.push(1);
-        pages.push("...");
-        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        pages.push("...");
-        for (let i = page - 1; i <= page + 1; i++) pages.push(i);
-        pages.push("...");
-        pages.push(totalPages);
-      }
-    }
-    return pages;
-  };
-
-  if (pagination.totalPages <= 1) return null;
-
-  return (
-    <div className="flex items-center justify-center gap-2 mt-8">
-      {/* Previous */}
-      {pagination.hasPrevPage ? (
-        <Link href={buildPageUrl(pagination.page - 1)}>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-700 text-gray-300 hover:bg-zinc-800"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-        </Link>
-      ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled
-          className="border-gray-700 text-gray-600"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-      )}
-
-      {/* Page Numbers */}
-      {getPageNumbers().map((pageNum, idx) =>
-        pageNum === "..." ? (
-          <span key={`ellipsis-${idx}`} className="px-2 text-gray-500">
-            ...
-          </span>
-        ) : (
-          <Link key={pageNum} href={buildPageUrl(pageNum as number)}>
-            <Button
-              variant={pagination.page === pageNum ? "default" : "outline"}
-              size="sm"
-              className={
-                pagination.page === pageNum
-                  ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "border-gray-700 text-gray-300 hover:bg-zinc-800"
-              }
-            >
-              {pageNum}
-            </Button>
+            <Package className="w-5 h-5" />
+            View All Items
+            <ArrowRight className="w-5 h-5" />
           </Link>
-        )
-      )}
+        </div>
 
-      {/* Next */}
-      {pagination.hasNextPage ? (
-        <Link href={buildPageUrl(pagination.page + 1)}>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-700 text-gray-300 hover:bg-zinc-800"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </Link>
-      ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled
-          className="border-gray-700 text-gray-600"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      )}
-    </div>
-  );
+        <p className="mt-8 text-gray-500 text-sm">
+          Gildan • Bella+Canvas • Next Level • Champion
+        </p>
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-500">
+        <span className="text-sm">Scroll to explore</span>
+        <div className="w-6 h-10 border-2 border-gray-600 rounded-full flex items-start justify-center p-2">
+          <div className="w-1 h-2 bg-red-600 rounded-full animate-bounce" />
+        </div>
+      </div>
+
+      {/* Bottom gradient */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
+    </section>
+  )
 }
 
-// Active Filters Display
-function ActiveFilters({ searchParams }: { searchParams: SearchParams }) {
-  const filters: { label: string; key: keyof SearchParams }[] = [];
-
-  if (searchParams.search) filters.push({ label: `Search: "${searchParams.search}"`, key: "search" });
-  if (searchParams.category) filters.push({ label: `Category: ${searchParams.category}`, key: "category" });
-  if (searchParams.brand) filters.push({ label: `Brand: ${searchParams.brand}`, key: "brand" });
-  if (searchParams.minPrice) filters.push({ label: `Min: $${searchParams.minPrice}`, key: "minPrice" });
-  if (searchParams.maxPrice) filters.push({ label: `Max: $${searchParams.maxPrice}`, key: "maxPrice" });
-
-  if (filters.length === 0) return null;
-
-  const removeFilter = (keyToRemove: keyof SearchParams) => {
-    const params = new URLSearchParams();
-    if (searchParams.search && keyToRemove !== "search") params.set("search", searchParams.search);
-    if (searchParams.category && keyToRemove !== "category") params.set("category", searchParams.category);
-    if (searchParams.brand && keyToRemove !== "brand") params.set("brand", searchParams.brand);
-    if (searchParams.minPrice && keyToRemove !== "minPrice") params.set("minPrice", searchParams.minPrice);
-    if (searchParams.maxPrice && keyToRemove !== "maxPrice") params.set("maxPrice", searchParams.maxPrice);
-    const queryString = params.toString();
-    return queryString ? `/blanks?${queryString}` : "/blanks";
-  };
-
+function CategoriesSkeleton() {
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
-      {filters.map((filter) => (
-        <Link key={filter.key} href={removeFilter(filter.key)}>
-          <Badge
-            variant="outline"
-            className="border-red-500/50 text-red-400 hover:bg-red-600/20 cursor-pointer"
-          >
-            {filter.label}
-            <X className="w-3 h-3 ml-1" />
-          </Badge>
-        </Link>
+    <div className="space-y-1">
+      {[...Array(9)].map((_, i) => (
+        <div key={i} className="w-full h-screen bg-zinc-900 animate-pulse" />
       ))}
     </div>
-  );
+  )
 }
 
-// Loading Skeleton
-function ProductGridSkeleton() {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {Array.from({ length: 12 }).map((_, i) => (
-        <Card key={i} className="bg-zinc-900 border-gray-800 overflow-hidden animate-pulse">
-          <div className="aspect-square bg-gray-800" />
-          <CardContent className="p-4 space-y-2">
-            <div className="h-3 bg-gray-800 rounded w-1/3" />
-            <div className="h-4 bg-gray-800 rounded w-full" />
-            <div className="h-4 bg-gray-800 rounded w-2/3" />
-            <div className="h-4 bg-gray-800 rounded w-1/4" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-// Empty State
-function EmptyState() {
-  return (
-    <div className="text-center py-16">
-      <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-      <h3 className="text-xl font-semibold text-white mb-2">No Products Found</h3>
-      <p className="text-gray-400 mb-6 max-w-md mx-auto">
-        We could not find any products matching your filters. Try adjusting your search criteria or clearing filters.
-      </p>
-      <Link href="/blanks">
-        <Button className="bg-red-600 hover:bg-red-700">
-          Clear All Filters
-        </Button>
-      </Link>
-    </div>
-  );
-}
-
-// Main Page Component
-export default async function BlanksPage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
-  const params = await searchParams;
-
-  // Fetch data directly from database in parallel
-  const [blanksData, categories, brands] = await Promise.all([
-    getProducts(params),
-    getCategories(),
-    getBrands(),
-  ]);
-
-  const products = blanksData.products;
-  const pagination = blanksData.pagination;
+export default async function BlanksLandingPage() {
+  const categories = await getCategories()
 
   return (
     <>
-      <BreadcrumbSchema
-        items={[
-          { name: "Home", url: "https://printguys.ca" },
-          { name: "Shop Blanks", url: "https://printguys.ca/blanks" },
-        ]}
-      />
+      {/* Hero Section */}
+      <HeroSection />
 
-      <main className="bg-black text-white min-h-screen">
-        {/* Hero Section */}
-        <section className="py-16 bg-gradient-to-b from-zinc-900 to-black">
-          <div className="container mx-auto px-4 text-center">
-            <div className="inline-flex items-center gap-2 bg-red-600/20 text-red-400 px-4 py-2 rounded-full mb-6">
-              <Shirt className="w-5 h-5" />
-              <span>Premium Suppliers</span>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Shop Blank Apparel
-            </h1>
-            <p className="text-xl text-gray-400 mb-4 max-w-2xl mx-auto">
-              Browse our catalog of premium blank apparel from top wholesale suppliers.
-              Find the perfect blanks for your custom printing projects.
-            </p>
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
-              <span>Gildan</span>
-              <span className="text-gray-600">|</span>
-              <span>Bella+Canvas</span>
-              <span className="text-gray-600">|</span>
-              <span>Next Level</span>
-              <span className="text-gray-600">|</span>
-              <span>Champion</span>
-              <span className="text-gray-600">|</span>
-              <span>And More</span>
-            </div>
+      {/* Category Sections */}
+      <Suspense fallback={<CategoriesSkeleton />}>
+        {categories.map((category) => (
+          <CategoryCard key={category.id} category={category} />
+        ))}
+      </Suspense>
+
+      {/* Bottom CTA */}
+      <section className="relative py-24 bg-black">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Need Custom Printing?
+          </h2>
+          <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+            We offer DTF transfers, screen printing, embroidery, and more. Get a quote for your custom apparel project.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+            >
+              Get a Quote
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href="/services/dtf"
+              className="inline-flex items-center gap-2 border border-gray-600 hover:bg-zinc-800 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+            >
+              View Services
+            </Link>
           </div>
-        </section>
-
-        {/* Main Content */}
-        <section className="py-8 bg-black">
-          <div className="container mx-auto px-4">
-            <div className="flex gap-8">
-              {/* Desktop Sidebar */}
-              <aside className="hidden lg:block w-64 flex-shrink-0">
-                <div className="sticky top-24 bg-zinc-900 rounded-xl p-6 border border-gray-800">
-                  <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Filter className="w-5 h-5" />
-                    Filters
-                  </h2>
-                  <FilterSidebar
-                    categories={categories}
-                    brands={brands}
-                    searchParams={params}
-                  />
-                </div>
-              </aside>
-
-              {/* Products Section */}
-              <div className="flex-1">
-                {/* Mobile Filter Button & Results Count */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="text-gray-400">
-                    {pagination.totalCount > 0 ? (
-                      <span>
-                        Showing{" "}
-                        <span className="text-white font-medium">
-                          {(pagination.page - 1) * pagination.limit + 1}-
-                          {Math.min(
-                            pagination.page * pagination.limit,
-                            pagination.totalCount
-                          )}
-                        </span>{" "}
-                        of{" "}
-                        <span className="text-white font-medium">
-                          {pagination.totalCount}
-                        </span>{" "}
-                        products
-                      </span>
-                    ) : (
-                      <span>No products found</span>
-                    )}
-                  </div>
-
-                  {/* Mobile Filter Sheet */}
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="lg:hidden border-gray-700 text-gray-300"
-                      >
-                        <Filter className="w-4 h-4 mr-2" />
-                        Filters
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent
-                      side="left"
-                      className="bg-zinc-900 border-gray-800 overflow-y-auto"
-                    >
-                      <SheetHeader>
-                        <SheetTitle className="text-white">Filters</SheetTitle>
-                      </SheetHeader>
-                      <div className="mt-6">
-                        <FilterSidebar
-                          categories={categories}
-                          brands={brands}
-                          searchParams={params}
-                        />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-                </div>
-
-                {/* Active Filters */}
-                <ActiveFilters searchParams={params} />
-
-                {/* Products Grid */}
-                <Suspense fallback={<ProductGridSkeleton />}>
-                  {products.length > 0 ? (
-                    <>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {products.map((product) => (
-                          <ProductCard key={product.id} product={product} />
-                        ))}
-                      </div>
-                      <Pagination pagination={pagination} searchParams={params} />
-                    </>
-                  ) : (
-                    <EmptyState />
-                  )}
-                </Suspense>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16 bg-zinc-900">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4">Need Custom Printing?</h2>
-            <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-              We offer DTF transfers, screen printing, embroidery, and more.
-              Get a quote for your custom apparel project.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="bg-red-600 hover:bg-red-700" asChild>
-                <Link href="/contact">Get a Quote</Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-gray-600 hover:bg-gray-800"
-                asChild
-              >
-                <Link href="/services/dtf">View Services</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-      </main>
+        </div>
+      </section>
     </>
-  );
+  )
 }
