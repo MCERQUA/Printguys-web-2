@@ -26,11 +26,11 @@ export interface HeroProps {
 }
 
 export function Hero({
-  title = "Professional DTF Printing & Custom Services",
-  subtitle = "Custom Printed Merch and company apparel in vaughan -no minimums.",
+  title = "Professional Printing & Custom Services",
+  subtitle = "Custom printing in apparel and merchandise in Concord ON - no minimums.",
   stats = [
     { value: "2-5 Days", label: "Fast Turnaround" },
-    { value: "$0.038/sq\"", label: "DTF Transfer Pricing" },
+    { value: "$0.038/sq\"", label: "Transfer Pricing" },
     { value: "No Min", label: "Order Requirements" },
   ],
   ctaButtons = [
@@ -49,7 +49,7 @@ export function Hero({
           <h1 className="mb-6 text-5xl font-bold lg:text-7xl">
             Professional{" "}
             <span className="bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
-              DTF Printing
+              Printing
             </span>
             <br />
             & Custom Services
@@ -57,7 +57,7 @@ export function Hero({
           <p className="mb-6 text-xl text-gray-300 lg:text-2xl">{subtitle}</p>
 
           <p className="mb-8 max-w-4xl text-lg leading-relaxed text-gray-300">
-            <strong className="text-red-500">PrintGuys</strong> is Canada&apos;s leading DTF
+            <strong className="text-red-500">PrintGuys</strong> is Canada&apos;s leading
             printing and full-service apparel production company. From single-piece orders to
             large-scale production, we deliver professional results with{" "}
             <strong>transparent pricing</strong> and <strong>no minimum requirements</strong>.
