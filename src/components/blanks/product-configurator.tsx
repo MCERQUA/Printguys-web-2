@@ -384,6 +384,7 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
               src={colorImages[selectedImageIndex]}
               alt={`${product.name} - ${selectedColor.colorName}`}
               fill
+              unoptimized
               className="object-contain p-4"
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
@@ -422,6 +423,7 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
                   src={img}
                   alt={`${product.name} thumbnail ${index + 1}`}
                   fill
+                  unoptimized
                   className="object-contain p-1"
                   sizes="80px"
                 />
