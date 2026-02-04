@@ -1,0 +1,2 @@
+public/images/blanks/sanmar/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+public/images/blanks/sanmar/**/*.png filter=lfs diff=lfs merge=lfs -text
