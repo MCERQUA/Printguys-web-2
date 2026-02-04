@@ -1,2 +1,5 @@
 export { ProductConfigurator } from './product-configurator'
 export type { Product } from './product-configurator'
+export { ProductTabs } from './product-tabs'
+export { QuoteDrawer } from './quote-drawer'
+export { CompanionProducts } from './companion-products'

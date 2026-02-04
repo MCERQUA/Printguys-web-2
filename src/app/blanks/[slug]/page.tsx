@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronRight, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ProductConfigurator, type Product } from '@/components/blanks'
+import { ProductConfigurator, ProductTabs, QuoteDrawer, CompanionProducts, type Product } from '@/components/blanks'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -176,6 +176,23 @@ export default async function BlankProductPage({ params }: PageProps) {
       <section className="container mx-auto px-4 py-8">
         <ProductConfigurator product={product} />
       </section>
+
+      {/* Product Details Tabs */}
+      <section className="container mx-auto px-4 py-8 border-t border-zinc-800">
+        <ProductTabs product={product} />
+      </section>
+
+      {/* Companion Products */}
+      <section className="container mx-auto px-4 py-8 border-t border-zinc-800">
+        <CompanionProducts
+          currentProductId={product.id}
+          categoryId={product.category?.id}
+          brand={product.brand}
+        />
+      </section>
+
+      {/* Quote Drawer */}
+      <QuoteDrawer />
 
       {/* JSON-LD Product Structured Data */}
       <script

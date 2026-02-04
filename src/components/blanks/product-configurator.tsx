@@ -17,7 +17,14 @@ import {
   Package,
   Truck,
   Shield,
+  FileText,
+  Share2,
+  Heart,
+  ZoomIn,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
+import { useQuoteStore } from '@/stores/quote-store'
 
 // Types for the API response
 interface Variant {
@@ -152,6 +159,8 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
   const router = useRouter()
   const addBlankItem = useCartStore((state) => state.addBlankItem)
   const openCart = useCartStore((state) => state.openCart)
+  const addQuoteItem = useQuoteStore((state) => state.addQuoteItem)
+  const openQuote = useQuoteStore((state) => state.openQuote)
 
   // Initialize size quantities
   const initialQuantities = useMemo(() => {
@@ -169,6 +178,8 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [sizeQuantities, setSizeQuantities] = useState<SizeQuantities>(initialQuantities)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const [isZoomed, setIsZoomed] = useState(false)
+  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 })
 
   // Get images for current color selection
   const colorImages = useMemo(() => {
@@ -373,22 +384,105 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
     router.push(`/design-studio?${params.toString()}`)
   }, [product, selectedColor, colorImages, router])
 
+  // Handle Add to Quote
+  const handleAddToQuote = useCallback(() => {
+    if (totalQuantity === 0) return
+
+    // Filter out sizes with 0 quantity
+    const sizesWithQuantity = Object.fromEntries(
+      Object.entries(sizeQuantities).filter(([, qty]) => qty > 0)
+    )
+
+    addQuoteItem({
+      productId: product.id,
+      productName: product.name,
+      styleNumber: product.styleNumber,
+      brand: product.brand,
+      colorName: selectedColor.colorName,
+      colorHex: selectedColor.hexCode || undefined,
+      imageUrl: colorImages[0] || product.primaryImageUrl || undefined,
+      sizes: sizesWithQuantity,
+      estimatedPrice: totalPrice,
+    })
+
+    // Open quote drawer
+    openQuote()
+
+    // Reset quantities after adding
+    const resetQuantities: SizeQuantities = {}
+    product.availableSizes.forEach((size) => {
+      resetQuantities[size] = 0
+    })
+    setSizeQuantities(resetQuantities)
+  }, [
+    product,
+    selectedColor,
+    totalQuantity,
+    totalPrice,
+    sizeQuantities,
+    colorImages,
+    addQuoteItem,
+    openQuote,
+  ])
+
+  // Handle Share
+  const handleShare = useCallback(async () => {
+    const shareData = {
+      title: product.name,
+      text: `Check out ${product.name} by ${product.brand} at PrintGuys`,
+      url: window.location.href,
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData)
+      } catch {
+        // User cancelled or error
+      }
+    } else {
+      // Fallback: copy to clipboard
+      await navigator.clipboard.writeText(window.location.href)
+      alert('Link copied to clipboard!')
+    }
+  }, [product])
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
       {/* Image Gallery - Left Column */}
       <div className="space-y-4">
-        {/* Main Image */}
-        <div className="relative aspect-square bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800">
+        {/* Main Image with Zoom */}
+        <div
+          className="relative aspect-square bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 cursor-zoom-in group"
+          onMouseEnter={() => setIsZoomed(true)}
+          onMouseLeave={() => {
+            setIsZoomed(false)
+            setZoomPosition({ x: 50, y: 50 })
+          }}
+          onMouseMove={(e) => {
+            if (!isZoomed) return
+            const rect = e.currentTarget.getBoundingClientRect()
+            const x = ((e.clientX - rect.left) / rect.width) * 100
+            const y = ((e.clientY - rect.top) / rect.height) * 100
+            setZoomPosition({ x, y })
+          }}
+        >
           {colorImages[selectedImageIndex] ? (
-            <Image
-              src={colorImages[selectedImageIndex]}
-              alt={`${product.name} - ${selectedColor.colorName}`}
-              fill
-              unoptimized
-              className="object-contain p-4"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
-            />
+            <div className="relative w-full h-full overflow-hidden">
+              <Image
+                src={colorImages[selectedImageIndex]}
+                alt={`${product.name} - ${selectedColor.colorName}`}
+                fill
+                unoptimized
+                className={`object-contain p-4 transition-transform duration-200 ${
+                  isZoomed ? 'scale-150' : 'scale-100'
+                }`}
+                style={isZoomed ? {
+                  transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                } : undefined}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
+            </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Package className="w-32 h-32 text-zinc-700" />
@@ -396,7 +490,7 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
           )}
 
           {/* Badges */}
-          <div className="absolute top-4 left-4 flex flex-col gap-2">
+          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
             {product.isNew && (
               <Badge className="bg-green-600 text-white">New</Badge>
             )}
@@ -404,6 +498,39 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
               <Badge className="bg-red-600 text-white">Featured</Badge>
             )}
           </div>
+
+          {/* Zoom Indicator */}
+          <div className="absolute bottom-4 right-4 bg-black/60 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <ZoomIn className="w-5 h-5 text-white" />
+          </div>
+
+          {/* Image Navigation Arrows */}
+          {colorImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setSelectedImageIndex((prev) =>
+                    prev === 0 ? colorImages.length - 1 : prev - 1
+                  )
+                }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setSelectedImageIndex((prev) =>
+                    prev === colorImages.length - 1 ? 0 : prev + 1
+                  )
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <ChevronRight className="w-5 h-5 text-white" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Thumbnail Strip */}
@@ -514,42 +641,57 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-white">
               Color:{' '}
-              <span className="text-red-500">{selectedColor.colorName}</span>
+              <span className="text-red-500 font-semibold">{selectedColor.colorName}</span>
+              {selectedColor.pantoneCode && (
+                <span className="text-gray-500 text-xs ml-2">
+                  (Pantone {selectedColor.pantoneCode})
+                </span>
+              )}
             </label>
             <span className="text-sm text-gray-400">
-              {product.variantsByColor.length} colors available
+              {product.variantsByColor.length} colors
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {product.variantsByColor.map((color) => (
-              <button
-                key={color.colorName}
-                onClick={() => handleColorSelect(color)}
-                className={`group relative w-10 h-10 rounded-full border-2 transition-all ${
-                  selectedColor.colorName === color.colorName
-                    ? 'border-red-500 ring-2 ring-red-500/50'
-                    : 'border-zinc-600 hover:border-zinc-400'
-                }`}
-                style={{
-                  backgroundColor: color.hexCode || '#808080',
-                }}
-                title={color.colorName}
-              >
-                {selectedColor.colorName === color.colorName && (
-                  <Check
-                    className={`absolute inset-0 m-auto w-5 h-5 ${
-                      isLightColor(color.hexCode) ? 'text-black' : 'text-white'
+          {/* Color Grid with Names */}
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+            {product.variantsByColor.map((color) => {
+              const isSelected = selectedColor.colorName === color.colorName
+              return (
+                <button
+                  key={color.colorName}
+                  onClick={() => handleColorSelect(color)}
+                  className={`group flex flex-col items-center p-2 rounded-lg transition-all ${
+                    isSelected
+                      ? 'bg-red-600/20 border-2 border-red-500'
+                      : 'bg-zinc-800/50 border-2 border-transparent hover:border-zinc-600'
+                  }`}
+                  title={`${color.colorName}${color.pantoneCode ? ` - Pantone ${color.pantoneCode}` : ''}`}
+                >
+                  <div
+                    className={`relative w-8 h-8 rounded-full border-2 ${
+                      isSelected ? 'border-white' : 'border-zinc-600'
                     }`}
-                  />
-                )}
-
-                {/* Tooltip */}
-                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-zinc-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                  {color.colorName}
-                </span>
-              </button>
-            ))}
+                    style={{ backgroundColor: color.hexCode || '#808080' }}
+                  >
+                    {isSelected && (
+                      <Check
+                        className={`absolute inset-0 m-auto w-4 h-4 ${
+                          isLightColor(color.hexCode) ? 'text-black' : 'text-white'
+                        }`}
+                      />
+                    )}
+                  </div>
+                  <span
+                    className={`mt-1 text-xs text-center line-clamp-2 ${
+                      isSelected ? 'text-white font-medium' : 'text-gray-400'
+                    }`}
+                  >
+                    {color.colorName}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -649,29 +791,77 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
           )}
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Three Options */}
         <div className="space-y-3">
+          {/* Primary Actions Row */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Buy Blank - Primary Action */}
+            <Button
+              onClick={handleAddToCart}
+              disabled={totalQuantity === 0 || isAddingToCart}
+              className="h-14 text-base font-bold bg-red-600 hover:bg-red-700 disabled:bg-zinc-700 disabled:text-zinc-400"
+            >
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              {isAddingToCart ? 'Adding...' : 'Buy Blank'}
+            </Button>
+
+            {/* Decorate - Design Studio */}
+            <Button
+              onClick={handleAddDecoration}
+              className="h-14 text-base font-bold bg-gradient-to-r from-purple-600 to-red-600 hover:from-purple-700 hover:to-red-700"
+            >
+              <Palette className="w-5 h-5 mr-2" />
+              Decorate
+            </Button>
+          </div>
+
+          {/* Add to Quote - Full Width */}
           <Button
-            onClick={handleAddToCart}
-            disabled={totalQuantity === 0 || isAddingToCart}
-            className="w-full h-14 text-lg font-bold bg-red-600 hover:bg-red-700 disabled:bg-zinc-700 disabled:text-zinc-400"
+            onClick={handleAddToQuote}
+            disabled={totalQuantity === 0}
+            variant="outline"
+            className="w-full h-12 font-medium border-zinc-600 text-gray-300 hover:bg-zinc-800 hover:text-white disabled:opacity-50"
           >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            {isAddingToCart
-              ? 'Adding...'
-              : totalQuantity === 0
-              ? 'Select Sizes to Add'
-              : `Add to Cart - $${totalPrice.toFixed(2)}`}
+            <FileText className="w-5 h-5 mr-2" />
+            {totalQuantity === 0
+              ? 'Select Sizes to Add to Quote'
+              : `Add to Quote - ${totalQuantity} pieces`}
           </Button>
 
-          <Button
-            onClick={handleAddDecoration}
-            variant="outline"
-            className="w-full h-12 font-medium border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
-          >
-            <Palette className="w-5 h-5 mr-2" />
-            Add Custom Decoration
-          </Button>
+          {/* Utility Buttons */}
+          <div className="flex gap-2">
+            <Button
+              onClick={handleShare}
+              variant="ghost"
+              size="sm"
+              className="flex-1 text-gray-400 hover:text-white hover:bg-zinc-800"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Share
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1 text-gray-400 hover:text-white hover:bg-zinc-800"
+            >
+              <Heart className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+          </div>
+
+          {/* Price Summary when items selected */}
+          {totalQuantity > 0 && (
+            <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-green-400 text-sm">
+                  {totalQuantity} pieces @ ${currentUnitPrice.toFixed(2)}/ea
+                </span>
+                <span className="text-green-400 font-bold text-lg">
+                  ${totalPrice.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Product Features */}
@@ -690,51 +880,13 @@ export function ProductConfigurator({ product }: ProductConfiguratorProps) {
           </div>
         </div>
 
-        {/* Product Description */}
-        {product.description && (
-          <div className="pt-6 border-t border-zinc-800">
-            <h2 className="text-xl font-bold text-white mb-3">Product Description</h2>
-            <div className="prose prose-invert max-w-none">
-              <p className="text-gray-300 whitespace-pre-line text-sm">{product.description}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Print Methods */}
-        {product.printMethods && product.printMethods.length > 0 && (
-          <div>
-            <h3 className="text-lg font-bold text-white mb-2">
-              Compatible Decoration Methods
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {product.printMethods.map((method) => (
-                <Badge
-                  key={method}
-                  variant="outline"
-                  className="border-zinc-700 text-gray-300"
-                >
-                  {formatPrintMethod(method)}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tags */}
-        {product.tags && product.tags.length > 0 && (
-          <div>
-            <h3 className="text-lg font-bold text-white mb-2">Tags</h3>
-            <div className="flex flex-wrap gap-2">
-              {product.tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="bg-zinc-800 text-gray-300"
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
+        {/* Quick Description Preview */}
+        {product.shortDescription && (
+          <div className="pt-4 border-t border-zinc-800">
+            <p className="text-gray-400 text-sm">{product.shortDescription}</p>
+            <p className="text-xs text-gray-500 mt-2">
+              See tabs below for full product details, specifications, and sizing info.
+            </p>
           </div>
         )}
       </div>
