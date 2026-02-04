@@ -1,5 +1,24 @@
 # PrintGuys Next.js - Project Instructions
 
+## ⚠️ CRITICAL: Production vs Localhost
+
+**DEPLOYMENT TARGET: NETLIFY (Production)**
+
+- This site deploys to Netlify via GitHub (auto-deploy on push to main)
+- **NEVER hardcode localhost URLs** in production code
+- Use localhost ONLY for local build testing with `npm run build`
+- Server components should query Prisma directly, NOT fetch API routes with URLs
+- All environment variables must be set in Netlify, not just locally
+
+```bash
+# Local testing ONLY
+npm run build  # Verify build works locally
+npm run dev    # Local development server
+
+# Production
+git push origin main  # Deploys to Netlify automatically
+```
+
 ## Build & Deployment
 
 This project deploys to **Netlify** with auto-deploy on push to main.

@@ -4,28 +4,150 @@ import Link from 'next/link'
 import { ChevronRight, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ProductConfigurator, ProductTabs, QuoteDrawer, CompanionProducts, type Product } from '@/components/blanks'
+import { prisma } from '@/lib/prisma'
 
 interface PageProps {
   params: Promise<{ slug: string }>
 }
 
-// Fetch product data
+interface ColorGroup {
+  colorName: string
+  colorNameFr: string | null
+  hexCode: string | null
+  pantoneCode: string | null
+  imageUrl: string | null
+  variants: Array<{
+    id: string
+    sku: string
+    size: string
+    msrp: number
+    price1: number
+    priceCase: number
+    price10Case: number
+    caseQuantity: number
+    weight: number
+    inStock: boolean
+    stockLevel: number | null
+  }>
+}
+
+// Fetch product data directly from Prisma (server component best practice)
 async function getProduct(slug: string): Promise<Product | null> {
   try {
-    // Use absolute URL for server-side fetch
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/blanks/${slug}`, {
-      next: { revalidate: 60 }, // Cache for 60 seconds
+    const product = await prisma.blankProduct.findFirst({
+      where: {
+        OR: [
+          { id: slug },
+          { slug }
+        ],
+        isActive: true,
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            nameFr: true,
+            slug: true,
+            description: true,
+          }
+        },
+        supplier: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            logoUrl: true,
+          }
+        },
+        variants: {
+          orderBy: [
+            { colorName: 'asc' },
+            { size: 'asc' },
+          ],
+        },
+      },
     })
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null
-      }
-      throw new Error('Failed to fetch product')
+    if (!product) {
+      return null
     }
 
-    return response.json()
+    // Group variants by color for easier frontend display
+    const variantsByColor = product.variants.reduce<Record<string, ColorGroup>>((acc, variant) => {
+      const colorKey = variant.colorName
+
+      if (!acc[colorKey]) {
+        acc[colorKey] = {
+          colorName: variant.colorName,
+          colorNameFr: variant.colorNameFr,
+          hexCode: variant.hexCode,
+          pantoneCode: variant.pantoneCode,
+          imageUrl: variant.imageUrl,
+          variants: [],
+        }
+      }
+
+      acc[colorKey].variants.push({
+        id: variant.id,
+        sku: variant.sku,
+        size: variant.size,
+        msrp: Number(variant.msrp),
+        price1: Number(variant.price1),
+        priceCase: Number(variant.priceCase),
+        price10Case: Number(variant.price10Case),
+        caseQuantity: variant.caseQuantity,
+        weight: Number(variant.weight),
+        inStock: variant.inStock,
+        stockLevel: variant.stockLevel,
+      })
+
+      return acc
+    }, {})
+
+    // Get unique sizes in order
+    const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL']
+    const uniqueSizes = [...new Set(product.variants.map(v => v.size))]
+      .sort((a, b) => {
+        const aIndex = sizeOrder.indexOf(a)
+        const bIndex = sizeOrder.indexOf(b)
+        if (aIndex === -1 && bIndex === -1) return a.localeCompare(b)
+        if (aIndex === -1) return 1
+        if (bIndex === -1) return -1
+        return aIndex - bIndex
+      })
+
+    // Format response
+    return {
+      id: product.id,
+      sku: product.sku,
+      styleNumber: product.styleNumber,
+      slug: product.slug,
+      name: product.name,
+      nameFr: product.nameFr,
+      description: product.description,
+      descriptionFr: product.descriptionFr,
+      shortDescription: product.shortDescription,
+      brand: product.brand,
+      brandFr: product.brandFr,
+      msrp: Number(product.msrp),
+      priceMin: Number(product.priceMin),
+      priceMax: Number(product.priceMax),
+      primaryImageUrl: product.primaryImageUrl,
+      images: product.images,
+      printMethods: product.printMethods,
+      isNew: product.isNew,
+      isFeatured: product.isFeatured,
+      tags: product.tags,
+      availableSizes: uniqueSizes,
+      availableColors: (product.availableColors as string[]) || [],
+      category: product.category,
+      supplier: product.supplier,
+      variantsByColor: Object.values(variantsByColor),
+      totalVariants: product.variants.length,
+      createdAt: product.createdAt.toISOString(),
+      updatedAt: product.updatedAt.toISOString(),
+    }
   } catch (error) {
     console.error('Error fetching product:', error)
     return null
