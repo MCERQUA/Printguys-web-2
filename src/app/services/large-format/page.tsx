@@ -15,6 +15,7 @@ import {
   Waves,
   StickyNote,
 } from "lucide-react";
+import { BreadcrumbSchema } from "@/components/seo/schema-markup";
 
 export default function LargeFormatPage() {
   const materials = [
@@ -76,6 +77,11 @@ export default function LargeFormatPage() {
 
   return (
     <>
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://printguys.ca' },
+        { name: 'Services', url: 'https://printguys.ca/services' },
+        { name: 'Large Format Printing', url: 'https://printguys.ca/services/large-format' },
+      ]} />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-black via-zinc-900 to-black py-20 lg:py-32">
         <div className="container mx-auto px-4">

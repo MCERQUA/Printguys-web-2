@@ -16,6 +16,7 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
+import { FAQSchema } from "@/components/seo/schema-markup";
 
 const iconMap: Record<string, React.ElementType> = {
   CircleHelp,
@@ -33,8 +34,15 @@ function getCategoryIcon(categoryId: string) {
 }
 
 export default function FAQPage() {
+  // Prepare FAQ data for schema
+  const faqSchemaData = faqs.map(faq => ({
+    question: faq.question,
+    answer: faq.answer.replace(/\n/g, ' '),
+  }));
+
   return (
     <main className="bg-black text-white">
+      <FAQSchema faqs={faqSchemaData} />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-black via-gray-900 to-black py-20">
         <div className="container mx-auto px-4">

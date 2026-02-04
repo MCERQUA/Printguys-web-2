@@ -17,6 +17,7 @@ import {
   Droplets,
 } from "lucide-react";
 import type { Metadata } from "next";
+import { BreadcrumbSchema } from "@/components/seo/schema-markup";
 
 export const metadata: Metadata = {
   title: "Sublimation Printing Canada | Photo-Quality Full Color | PrintGuys",
@@ -159,6 +160,11 @@ const materialNotes = [
 export default function SublimationPage() {
   return (
     <>
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://printguys.ca' },
+        { name: 'Services', url: 'https://printguys.ca/services' },
+        { name: 'Sublimation Printing', url: 'https://printguys.ca/services/sublimation' },
+      ]} />
       {/* Hero Section */}
       <ServiceHero
         title="Sublimation Printing"

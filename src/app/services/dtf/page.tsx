@@ -1,6 +1,7 @@
 import { Flame, Clock, Shirt, Sparkles, Droplets, ThumbsUp, Phone, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { BreadcrumbSchema } from "@/components/seo/schema-markup";
 
 export default function DTFPage() {
   const features = [
@@ -27,7 +28,13 @@ export default function DTFPage() {
   ];
 
   return (
-    <main className="bg-black text-white">
+    <>
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://printguys.ca' },
+        { name: 'Services', url: 'https://printguys.ca/services' },
+        { name: 'DTF Heat Transfers', url: 'https://printguys.ca/services/dtf' },
+      ]} />
+      <main className="bg-black text-white">
       {/* Hero */}
       <section className="py-20 bg-gradient-to-b from-zinc-900 to-black">
         <div className="container mx-auto px-4 text-center">
@@ -124,5 +131,6 @@ export default function DTFPage() {
         </div>
       </section>
     </main>
+    </>
   );
 }

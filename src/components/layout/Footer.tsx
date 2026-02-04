@@ -35,6 +35,7 @@ export function Footer() {
                 width={150}
                 height={50}
                 className="h-12 w-auto"
+                loading="lazy"
               />
             </Link>
             <p className="text-gray-400 mb-4">

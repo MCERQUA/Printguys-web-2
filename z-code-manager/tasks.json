@@ -1,0 +1,82 @@
+{
+  "project": "printguys-nextjs",
+  "created": "2026-01-26T17:28:00Z",
+  "lastUpdated": "2026-01-26T17:28:00Z",
+  "status": "in_progress",
+  "phases": [
+    {
+      "id": "phase1",
+      "name": "Critical Backend",
+      "priority": 1,
+      "status": "in_progress",
+      "tasks": [
+        {"id": "T001", "name": "Connect PostgreSQL database", "status": "pending", "agent": "agent1", "dependencies": []},
+        {"id": "T002", "name": "Run Prisma migrations", "status": "pending", "agent": "agent1", "dependencies": ["T001"]},
+        {"id": "T003", "name": "Update API routes to use real database", "status": "pending", "agent": "agent1", "dependencies": ["T002"]},
+        {"id": "T004", "name": "Set up email service (Resend)", "status": "pending", "agent": "agent2", "dependencies": []},
+        {"id": "T005", "name": "Wire contact form to send emails", "status": "pending", "agent": "agent2", "dependencies": ["T004"]},
+        {"id": "T006", "name": "Make orders persist to database", "status": "pending", "agent": "agent3", "dependencies": ["T002"]},
+        {"id": "T007", "name": "Make designs persist to database", "status": "pending", "agent": "agent3", "dependencies": ["T002"]}
+      ]
+    },
+    {
+      "id": "phase2",
+      "name": "E-Commerce",
+      "priority": 2,
+      "status": "pending",
+      "tasks": [
+        {"id": "T008", "name": "Build shopping cart store (Zustand)", "status": "pending", "agent": "agent4", "dependencies": []},
+        {"id": "T009", "name": "Create cart UI components", "status": "pending", "agent": "agent4", "dependencies": ["T008"]},
+        {"id": "T010", "name": "Integrate Stripe checkout", "status": "pending", "agent": "agent5", "dependencies": ["T008"]},
+        {"id": "T011", "name": "Create checkout page", "status": "pending", "agent": "agent5", "dependencies": ["T010"]},
+        {"id": "T012", "name": "Add order confirmation emails", "status": "pending", "agent": "agent5", "dependencies": ["T004", "T011"]},
+        {"id": "T013", "name": "Build customer dashboard page", "status": "pending", "agent": "agent6", "dependencies": ["T003"]},
+        {"id": "T014", "name": "Show order history", "status": "pending", "agent": "agent6", "dependencies": ["T006", "T013"]}
+      ]
+    },
+    {
+      "id": "phase3",
+      "name": "Admin Dashboard",
+      "priority": 3,
+      "status": "pending",
+      "tasks": [
+        {"id": "T015", "name": "Create admin layout", "status": "pending", "agent": "agent7", "dependencies": []},
+        {"id": "T016", "name": "Build orders management page", "status": "pending", "agent": "agent7", "dependencies": ["T015", "T006"]},
+        {"id": "T017", "name": "Build customers list page", "status": "pending", "agent": "agent7", "dependencies": ["T015", "T003"]},
+        {"id": "T018", "name": "Add order status updates", "status": "pending", "agent": "agent7", "dependencies": ["T016"]},
+        {"id": "T019", "name": "Basic analytics dashboard", "status": "pending", "agent": "agent7", "dependencies": ["T015"]}
+      ]
+    },
+    {
+      "id": "phase4",
+      "name": "Polish & Optimization",
+      "priority": 4,
+      "status": "pending",
+      "tasks": [
+        {"id": "T020", "name": "Add Google Analytics to all pages", "status": "pending", "agent": "agent8", "dependencies": []},
+        {"id": "T021", "name": "Add LocalBusiness schema markup", "status": "pending", "agent": "agent8", "dependencies": []},
+        {"id": "T022", "name": "Optimize images", "status": "pending", "agent": "agent8", "dependencies": []},
+        {"id": "T023", "name": "Add real portfolio content", "status": "pending", "agent": "agent8", "dependencies": []},
+        {"id": "T024", "name": "Performance audit & fixes", "status": "pending", "agent": "agent8", "dependencies": []},
+        {"id": "T025", "name": "Security audit & fixes", "status": "pending", "agent": "agent8", "dependencies": []}
+      ]
+    }
+  ],
+  "agents": {
+    "agent1": {"name": "Database Agent", "status": "idle", "currentTask": null, "pid": null},
+    "agent2": {"name": "Email Agent", "status": "idle", "currentTask": null, "pid": null},
+    "agent3": {"name": "Persistence Agent", "status": "idle", "currentTask": null, "pid": null},
+    "agent4": {"name": "Cart Agent", "status": "idle", "currentTask": null, "pid": null},
+    "agent5": {"name": "Stripe Agent", "status": "idle", "currentTask": null, "pid": null},
+    "agent6": {"name": "Customer Agent", "status": "idle", "currentTask": null, "pid": null},
+    "agent7": {"name": "Admin Agent", "status": "idle", "currentTask": null, "pid": null},
+    "agent8": {"name": "Polish Agent", "status": "idle", "currentTask": null, "pid": null}
+  },
+  "stats": {
+    "totalTasks": 25,
+    "completed": 0,
+    "inProgress": 0,
+    "pending": 25,
+    "failed": 0
+  }
+}

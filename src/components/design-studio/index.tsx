@@ -10,6 +10,7 @@ import { ExportModal } from './export-modal';
 import { OrderForm } from './order-form';
 import { PRODUCT_COLORS, PRODUCT_CONFIGS } from './constants';
 import type { ProductState, PlacedDecal, ProductSide, ProductColor, ProductType } from './types';
+import { trackDesignSave } from '@/components/analytics/google-analytics';
 
 interface DesignStudioProps {
   onSave?: (state: ProductState) => Promise<void>;
@@ -112,6 +113,8 @@ export const DesignStudio: React.FC<DesignStudioProps> = ({
     setIsSaving(true);
     try {
       await onSave(productState);
+      // Track successful design save
+      trackDesignSave(productState.type);
     } finally {
       setIsSaving(false);
     }

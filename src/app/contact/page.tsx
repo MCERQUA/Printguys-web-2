@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Phone, Mail, MessageSquare, Send, MapPin, Clock } from "lucide-react"
 import { toast } from "sonner"
+import { trackContactForm } from "@/components/analytics/google-analytics"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -85,13 +86,31 @@ export default function ContactPage() {
     },
   })
 
-  function onSubmit(data: z.infer<typeof contactFormSchema>) {
-    // In a real application, this would send the data to your backend
-    console.log("Form submitted:", data)
-    toast.success("Message sent successfully!", {
-      description: "We'll get back to you within 24 hours.",
-    })
-    form.reset()
+  async function onSubmit(data: z.infer<typeof contactFormSchema>) {
+    try {
+      // Send to API
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to send message')
+      }
+
+      // Track contact form submission
+      trackContactForm(data.service || 'general')
+
+      toast.success("Message sent successfully!", {
+        description: "We'll get back to you within 24 hours.",
+      })
+      form.reset()
+    } catch (error) {
+      toast.error("Failed to send message", {
+        description: "Please try again or contact us directly.",
+      })
+    }
   }
 
   return (

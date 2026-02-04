@@ -17,6 +17,7 @@ import {
   Star,
 } from "lucide-react";
 import type { Metadata } from "next";
+import { BreadcrumbSchema } from "@/components/seo/schema-markup";
 
 export const metadata: Metadata = {
   title: "Screen Printing Canada | Bulk Orders from $2.50/piece | PrintGuys",
@@ -130,6 +131,11 @@ const inkTypes = [
 export default function ScreenPrintingPage() {
   return (
     <>
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://printguys.ca' },
+        { name: 'Services', url: 'https://printguys.ca/services' },
+        { name: 'Screen Printing', url: 'https://printguys.ca/services/screen-printing' },
+      ]} />
       {/* Hero Section */}
       <ServiceHero
         title="Screen Printing"

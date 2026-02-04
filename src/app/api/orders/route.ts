@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { sendEmail, emailTemplates } from "@/lib/email";
 
 // In-memory storage for orders/quotes (temporary until database is set up)
 // In production, this would use Prisma with the Order model
@@ -122,11 +123,50 @@ export async function POST(request: NextRequest) {
 
     ordersStore.set(order.id, order);
 
-    // In production, you would:
-    // 1. Save to database
-    // 2. Send confirmation email to customer
-    // 3. Send notification to admin
-    // 4. Optionally create Stripe checkout session for immediate payment
+    // Send confirmation email to customer
+    try {
+      const emailTemplate = emailTemplates.orderReceived({
+        orderNumber: order.orderNumber,
+        customerName: customer.name,
+        totalAmount: pricing?.total || 0,
+        customerEmail: customer.email,
+        items: [],
+      });
+
+      await sendEmail({
+        to: customer.email,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+      });
+
+      console.log('Order confirmation email sent to:', customer.email);
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
+      // Continue with order creation even if email fails
+    }
+
+    // Send notification to admin
+    const adminEmail = process.env.ADMIN_EMAIL || 'nick@printguys.ca';
+    try {
+      const adminTemplate = emailTemplates.adminNewOrder({
+        orderNumber: order.orderNumber,
+        totalAmount: pricing?.total || 0,
+        customerEmail: customer.email,
+        items: [],
+        id: order.id,
+      });
+
+      await sendEmail({
+        to: adminEmail,
+        subject: adminTemplate.subject,
+        html: adminTemplate.html,
+      });
+
+      console.log('Admin notification sent to:', adminEmail);
+    } catch (emailError) {
+      console.error('Failed to send admin notification:', emailError);
+      // Continue with order creation even if email fails
+    }
 
     console.log('New quote request:', {
       orderNumber: order.orderNumber,

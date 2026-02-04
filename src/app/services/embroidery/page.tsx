@@ -17,6 +17,7 @@ import {
   Medal,
 } from "lucide-react";
 import type { Metadata } from "next";
+import { BreadcrumbSchema } from "@/components/seo/schema-markup";
 
 export const metadata: Metadata = {
   title: "Custom Embroidery Canada | Professional Branding from $8/piece | PrintGuys",
@@ -153,6 +154,11 @@ const threadTypes = [
 export default function EmbroideryPage() {
   return (
     <>
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://printguys.ca' },
+        { name: 'Services', url: 'https://printguys.ca/services' },
+        { name: 'Custom Embroidery', url: 'https://printguys.ca/services/embroidery' },
+      ]} />
       {/* Hero Section */}
       <ServiceHero
         title="Custom Embroidery"

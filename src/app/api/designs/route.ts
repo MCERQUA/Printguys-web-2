@@ -1,6 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// GA tracking helper (server-side - sets a flag for client to track)
+function trackDesignSaveEvent(productType: string) {
+  // This is server-side, so we can't directly call GA
+  // The client should handle tracking after successful save
+  // Returning info for potential client-side use
+  return { tracked: true, productType };
+}
+
 // In-memory storage for designs (temporary until database is set up)
 // In production, this would use Prisma with the Design model
 const designsStore = new Map<string, {

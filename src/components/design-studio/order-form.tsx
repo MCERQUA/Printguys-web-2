@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingCart, User, Mail, Phone, MessageSquare, Minus, Plus, Check, Loader2, MapPin, Building2, Printer } from 'lucide-react';
 import type { ProductState, ProductColor, ProductType } from './types';
 import { SIZES, PRODUCT_COLORS, PRODUCT_CONFIGS, PRODUCT_PRICES, PRINT_PRICES, PRINT_METHODS, BULK_DISCOUNTS, TAX_RATE, SHIPPING_COST, SHIPPING_THRESHOLD } from './constants';
+import { trackQuoteRequest } from '@/components/analytics/google-analytics';
 
 interface OrderFormProps {
   isOpen: boolean;
@@ -141,6 +142,15 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       if (!response.ok) {
         throw new Error(data.error || 'Failed to submit quote request');
       }
+
+      // Track quote request submission
+      trackQuoteRequest(data.orderNumber || `quote-${Date.now()}`, total, [{
+        id: productType,
+        name: `${productConfig.label} (${productColor})`,
+        service: printMethod,
+        unitPrice: unitPrice,
+        quantity: totalQuantity,
+      }]);
 
       setIsSubmitted(true);
     } catch (err) {

@@ -1,0 +1,84 @@
+
+> printguys-nextjs@0.1.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /home/nick/Nick/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /home/nick/Nick/Printguys-AI/printguys-nextjs/package-lock.json
+
+   ▲ Next.js 15.5.9
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 6.9s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/37) ...
+   Generating static pages (9/37) 
+   Generating static pages (18/37) 
+   Generating static pages (27/37) 
+ ✓ Generating static pages (37/37)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                 Size  First Load JS
+┌ ○ /                                                      193 B         105 kB
+├ ○ /_not-found                                            163 B         102 kB
+├ ○ /about                                                 200 B         105 kB
+├ ƒ /admin                                                 163 B         102 kB
+├ ƒ /admin/analytics                                       163 B         102 kB
+├ ƒ /admin/customers                                       133 B         117 kB
+├ ƒ /admin/customers/[id]                                  133 B         117 kB
+├ ƒ /admin/orders                                        1.81 kB         155 kB
+├ ƒ /api/admin/orders/[id]/status                          163 B         102 kB
+├ ƒ /api/admin/orders/bulk-status                          163 B         102 kB
+├ ƒ /api/checkout                                          163 B         102 kB
+├ ƒ /api/contact                                           163 B         102 kB
+├ ƒ /api/designs                                           163 B         102 kB
+├ ƒ /api/orders                                            163 B         102 kB
+├ ƒ /api/test-email                                        163 B         102 kB
+├ ƒ /api/webhooks/stripe                                   163 B         102 kB
+├ ○ /blog                                                  200 B         105 kB
+├ ● /blog/[slug]                                           200 B         105 kB
+├   ├ /blog/dtf-care-instructions
+├   ├ /blog/dtf-vs-screen-printing
+├   ├ /blog/design-tips-dtf
+├   └ /blog/custom-printing-guide-small-business-canada
+├ ○ /checkout                                            8.88 kB         203 kB
+├ ○ /contact                                             11.1 kB         209 kB
+├ ƒ /dashboard                                             200 B         105 kB
+├ ƒ /dashboard/orders                                      200 B         105 kB
+├ ƒ /dashboard/orders/[id]                                 200 B         105 kB
+├ ƒ /design-studio                                       56.6 kB         161 kB
+├ ○ /faq                                                   857 B         122 kB
+├ ○ /portfolio                                           8.37 kB         128 kB
+├ ○ /pricing                                               200 B         105 kB
+├ ○ /quote                                               4.74 kB         159 kB
+├ ○ /services                                              200 B         105 kB
+├ ○ /services/dtf                                          200 B         105 kB
+├ ○ /services/embroidery                                   193 B         105 kB
+├ ○ /services/large-format                                 193 B         105 kB
+├ ○ /services/safety-wear                                  193 B         105 kB
+├ ○ /services/screen-printing                              193 B         105 kB
+├ ○ /services/sublimation                                  193 B         105 kB
+├ ○ /services/uv-dtf-stickers                              193 B         105 kB
+├ ○ /services/vinyl-banners                                193 B         105 kB
+├ ƒ /sign-in/[[...sign-in]]                                407 B         139 kB
+├ ƒ /sign-up/[[...sign-up]]                                407 B         139 kB
+└ ○ /sitemap.xml                                           163 B         102 kB
++ First Load JS shared by all                             102 kB
+  ├ chunks/1255-8befde0980f5cba9.js                      45.6 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js                  54.2 kB
+  └ other shared chunks (total)                          2.02 kB
+
+
+ƒ Middleware                                             83.4 kB
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
