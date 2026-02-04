@@ -119,8 +119,15 @@ export async function GET(request: NextRequest) {
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalCount / take)
 
+    // Convert Decimal prices to numbers for JSON serialization
+    const productsWithNumbers = products.map(p => ({
+      ...p,
+      priceMin: Number(p.priceMin),
+      priceMax: Number(p.priceMax),
+    }))
+
     return NextResponse.json({
-      products,
+      products: productsWithNumbers,
       pagination: {
         page,
         limit: take,
