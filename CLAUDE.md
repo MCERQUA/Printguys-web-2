@@ -1,5 +1,27 @@
 # PrintGuys Next.js - Project Instructions
 
+## ⚠️⚠️⚠️ CRITICAL RULE - NEVER DELETE ANYTHING ⚠️⚠️⚠️
+
+**ABSOLUTELY FORBIDDEN:**
+- ❌ NEVER delete files - NOT EVER
+- ❌ NEVER use `rm` command
+- ❌ NEVER suggest deleting anything
+- ❌ NEVER "clean up" by removing files
+- ❌ NEVER delete logs, executors, scripts, configs
+- ❌ NEVER delete /images/ or /public/ folders
+- ❌ NEVER delete research files, prompts, or outputs
+- ❌ NEVER delete "old" or "broken" files
+
+**IF FILES SHOULDN'T BE IN GIT:**
+- ✅ Use .gitignore to exclude them
+- ✅ Ask the user first
+- ✅ Leave everything in place
+
+**CONSEQUENCES:**
+- Deleting downloaded images wastes time and money
+- Deletions cannot be easily recovered
+- USE .GITIGNORE FOR EXCLUSIONS, NOT DELETION
+
 ## ⚠️ CRITICAL: Production vs Localhost
 
 **DEPLOYMENT TARGET: NETLIFY (Production)**
