@@ -635,6 +635,24 @@ export function Header() {
 
           {/* Mobile Footer - Auth */}
           <div className="p-6 border-t border-gray-700/50 space-y-3">
+            <SignedIn>
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center w-full h-12 rounded-xl bg-gray-800/50 hover:bg-gray-800 text-white font-semibold transition-all duration-200"
+              >
+                <LayoutGrid className="w-5 h-5 mr-2" />
+                Dashboard
+              </Link>
+              <Link
+                href="/dashboard/orders"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center w-full h-12 rounded-xl bg-gray-800/50 hover:bg-gray-800 text-white font-semibold transition-all duration-200"
+              >
+                <ShoppingBag className="w-5 h-5 mr-2" />
+                My Orders
+              </Link>
+            </SignedIn>
             <SignedOut>
               <SignInButton mode="modal">
                 <Button
