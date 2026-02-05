@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { Menu, X, ChevronDown, Flame, Zap, Scissors, Palette, Shield, Tag, Ruler, PenTool, ShoppingCart, Shirt } from "lucide-react";
+import { Menu, X, ChevronDown, Flame, Zap, Scissors, Palette, Shield, Tag, Ruler, PenTool, ShoppingCart, Shirt, Wrench, ShoppingBag, User, LogIn, UserPlus, LayoutGrid, Sparkles } from "lucide-react";
 import {
   SignInButton,
   SignUpButton,
@@ -20,14 +20,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
 // Lazy load CartDrawer for better performance
 const CartDrawer = dynamic(() => import("@/components/cart").then(mod => ({ default: mod.CartDrawer })), {
@@ -99,19 +94,32 @@ const services = [
   },
 ];
 
-const navLinks = [
-  { name: "Home", href: "/" },
-  { name: "Shop Blanks", href: "/blanks", highlight: true, icon: Shirt },
-  { name: "Design Studio", href: "/design-studio", highlight: true, icon: PenTool },
-  { name: "About", href: "/about" },
-  { name: "Pricing", href: "/pricing" },
-  { name: "Blog", href: "/blog" },
-  { name: "Contact", href: "/contact" },
+const toolsItems = [
+  { name: "Design Studio", href: "/design-studio", icon: PenTool, description: "Create custom designs", highlight: true },
+  { name: "Get a Quote", href: "/quote", icon: Tag, description: "Quick price estimates", highlight: false },
+];
+
+const shopItems = [
+  { name: "Shop Blanks", href: "/blanks", icon: Shirt, description: "Premium blank apparel", highlight: true },
+  { name: "Catalog", href: "/blanks/catalog", icon: LayoutGrid, description: "Browse all products", highlight: false },
+  { name: "Pricing", href: "/pricing", icon: Tag, description: "View our pricing", highlight: false },
+];
+
+const otherLinks = [
+  { name: "Blog", href: "/blog", icon: null },
+  { name: "Portfolio", href: "/portfolio", icon: null },
+  { name: "FAQ", href: "/faq", icon: null },
+];
+
+const contactLinks = [
+  { name: "Contact Us", href: "/contact", icon: null },
+  { name: "About Us", href: "/about", icon: null },
 ];
 
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const isActive = (href: string) => {
     if (href === "/") {
@@ -121,207 +129,167 @@ export function Header() {
   };
 
   return (
-    <header className="bg-black border-b border-red-600 sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <nav className="flex items-center justify-between py-4">
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/images/logo/printguys-logo.webp"
-              alt="PrintGuys Logo"
-              width={120}
-              height={40}
-              className="h-8 w-auto md:h-10"
-              priority
-              fetchPriority="high"
-            />
-          </Link>
+    <>
+      <header className="bg-black/95 backdrop-blur-md border-b border-red-600/50 sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <nav className="flex items-center justify-between py-4">
+            {/* Logo */}
+            <Link href="/" className="flex items-center group">
+              <div className="relative">
+                <Image
+                  src="/images/logo/printguys-logo.webp"
+                  alt="PrintGuys Logo"
+                  width={120}
+                  height={40}
+                  className="h-8 w-auto md:h-10 transition-transform group-hover:scale-105"
+                  priority
+                  fetchPriority="high"
+                />
+                <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 group-hover:w-full transition-all duration-300" />
+              </div>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`nav-link transition-colors flex items-center gap-1 ${
-                    isActive(link.href)
-                      ? "text-red-500 font-semibold"
-                      : link.highlight
-                      ? "text-red-400 hover:text-red-300 font-semibold"
-                      : "text-white hover:text-red-500"
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-1">
+              {/* Shop Dropdown */}
+              <DropdownMenu onOpenChange={(open) => setActiveDropdown(open ? 'shop' : null)}>
+                <DropdownMenuTrigger
+                  className={`nav-link flex items-center px-4 py-2 rounded-lg transition-all duration-200 ${
+                    activeDropdown === 'shop' || pathname.startsWith('/blanks') || pathname === '/pricing'
+                      ? "text-red-500 bg-red-500/10 font-semibold"
+                      : "text-white/90 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  {Icon && <Icon className="w-4 h-4" />}
-                  {link.name}
-                </Link>
-              );
-            })}
-
-            {/* Services Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className={`nav-link flex items-center transition-colors ${
-                  pathname.startsWith("/services")
-                    ? "text-red-500 font-semibold"
-                    : "text-white hover:text-red-500"
-                }`}
-              >
-                Services
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="w-80 bg-gray-900 border-gray-700"
-              >
-                {services.map((service) => {
-                  const Icon = service.icon;
-                  return (
-                    <DropdownMenuItem
-                      key={service.href}
-                      asChild
-                      className="focus:bg-gray-800 cursor-pointer"
-                    >
-                      <Link
-                        href={service.href}
-                        className="flex items-center p-3 hover:bg-gray-800 transition-colors"
+                  <ShoppingBag className="w-4 h-4 mr-2" />
+                  Shop
+                  <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="w-72 bg-gray-900/95 backdrop-blur-md border-gray-700/50 shadow-2xl"
+                >
+                  <DropdownMenuLabel className="text-white/60 text-xs font-semibold tracking-wider uppercase">
+                    Shop
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-700/50" />
+                  {shopItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <DropdownMenuItem
+                        key={item.href}
+                        asChild
+                        className="focus:bg-gray-800 cursor-pointer"
                       >
-                        <div
-                          className={`${service.iconBg} w-10 h-10 rounded-full flex items-center justify-center mr-3`}
-                        >
-                          <Icon className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-white">
-                            {service.name}
-                          </div>
-                          <div className="text-sm text-gray-400">
-                            {service.description}
-                          </div>
-                        </div>
-                        {service.badge && (
-                          <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
-                            {service.badge}
-                          </span>
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  );
-                })}
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem asChild className="focus:bg-gray-800 cursor-pointer">
-                  <Link
-                    href="/services"
-                    className="flex items-center justify-center p-3 font-semibold text-red-500 hover:text-red-400"
-                  >
-                    View All Services →
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Auth Buttons */}
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button
-                  variant="ghost"
-                  className="text-white hover:text-red-500 hover:bg-transparent"
-                >
-                  Sign In
-                </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button
-                  variant="outline"
-                  className="border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
-                >
-                  Sign Up
-                </Button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "w-10 h-10",
-                  },
-                }}
-              />
-            </SignedIn>
-
-            {/* Cart */}
-            <CartDrawer />
-
-            {/* Get Quote Button */}
-            <Button
-              asChild
-              className="bg-red-600 text-white hover:bg-red-700 rounded-lg font-bold"
-            >
-              <Link href="/contact">Get Quote</Link>
-            </Button>
-          </div>
-
-          {/* Mobile Menu */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" className="text-white">
-                {mobileMenuOpen ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="w-80 bg-gray-900 border-gray-700"
-            >
-              <SheetHeader>
-                <SheetTitle className="text-white">Navigation</SheetTitle>
-              </SheetHeader>
-              <div className="mt-8 flex flex-col space-y-4">
-                {navLinks.map((link) => {
-                  const Icon = link.icon;
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`text-lg font-semibold transition-colors flex items-center gap-2 ${
-                        isActive(link.href)
-                          ? "text-red-500"
-                          : link.highlight
-                          ? "text-red-400 hover:text-red-300"
-                          : "text-white hover:text-red-500"
-                      }`}
-                    >
-                      {Icon && <Icon className="w-5 h-5" />}
-                      {link.name}
-                    </Link>
-                  );
-                })}
-
-                {/* Mobile Services List */}
-                <div className="pt-4 border-t border-gray-700">
-                  <div className="text-lg font-semibold text-white mb-4">
-                    Services
-                  </div>
-                  <div className="space-y-3">
-                    {services.map((service) => {
-                      const Icon = service.icon;
-                      return (
                         <Link
-                          key={service.href}
+                          href={item.href}
+                          className={`flex items-center p-3 hover:bg-gray-800 transition-colors ${item.highlight ? 'bg-red-500/10 hover:bg-red-500/20' : ''}`}
+                        >
+                          <div className={`${item.highlight ? 'bg-red-600' : 'bg-gray-700'} w-9 h-9 rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}>
+                            <Icon className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <div className={`font-semibold ${item.highlight ? 'text-red-400' : 'text-white'}`}>
+                              {item.name}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {item.description}
+                            </div>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Tools Dropdown */}
+              <DropdownMenu onOpenChange={(open) => setActiveDropdown(open ? 'tools' : null)}>
+                <DropdownMenuTrigger
+                  className={`nav-link flex items-center px-4 py-2 rounded-lg transition-all duration-200 ${
+                    activeDropdown === 'tools' || pathname.startsWith('/design-studio') || pathname.startsWith('/quote')
+                      ? "text-red-500 bg-red-500/10 font-semibold"
+                      : "text-white/90 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Wrench className="w-4 h-4 mr-2" />
+                  Tools
+                  <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="w-72 bg-gray-900/95 backdrop-blur-md border-gray-700/50 shadow-2xl"
+                >
+                  <DropdownMenuLabel className="text-white/60 text-xs font-semibold tracking-wider uppercase">
+                    Tools
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-700/50" />
+                  {toolsItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <DropdownMenuItem
+                        key={item.href}
+                        asChild
+                        className="focus:bg-gray-800 cursor-pointer"
+                      >
+                        <Link
+                          href={item.href}
+                          className={`flex items-center p-3 hover:bg-gray-800 transition-colors ${item.highlight ? 'bg-red-500/10 hover:bg-red-500/20' : ''}`}
+                        >
+                          <div className={`${item.highlight ? 'bg-red-600' : 'bg-gray-700'} w-9 h-9 rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}>
+                            <Icon className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <div className={`font-semibold ${item.highlight ? 'text-red-400' : 'text-white'}`}>
+                              {item.name}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {item.description}
+                            </div>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Services Dropdown */}
+              <DropdownMenu onOpenChange={(open) => setActiveDropdown(open ? 'services' : null)}>
+                <DropdownMenuTrigger
+                  className={`nav-link flex items-center px-4 py-2 rounded-lg transition-all duration-200 ${
+                    activeDropdown === 'services' || pathname.startsWith('/services')
+                      ? "text-red-500 bg-red-500/10 font-semibold"
+                      : "text-white/90 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Services
+                  <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="w-80 bg-gray-900/95 backdrop-blur-md border-gray-700/50 shadow-2xl"
+                >
+                  <DropdownMenuLabel className="text-white/60 text-xs font-semibold tracking-wider uppercase">
+                    Services
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-700/50" />
+                  {services.map((service) => {
+                    const Icon = service.icon;
+                    return (
+                      <DropdownMenuItem
+                        key={service.href}
+                        asChild
+                        className="focus:bg-gray-800 cursor-pointer"
+                      >
+                        <Link
                           href={service.href}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors"
+                          className="flex items-center p-3 hover:bg-gray-800 transition-colors"
                         >
                           <div
-                            className={`${service.iconBg} w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0`}
+                            className={`${service.iconBg} w-9 h-9 rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}
                           >
-                            <Icon className="w-5 h-5 text-white" />
+                            <Icon className="w-4 h-4 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-white text-sm">
@@ -331,76 +299,374 @@ export function Header() {
                               {service.description}
                             </div>
                           </div>
+                          {service.badge && (
+                            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0">
+                              {service.badge}
+                            </span>
+                          )}
                         </Link>
-                      );
-                    })}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  <DropdownMenuSeparator className="bg-gray-700/50" />
+                  <DropdownMenuItem asChild className="focus:bg-gray-800 cursor-pointer">
                     <Link
                       href="/services"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-center p-3 font-semibold text-red-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-colors"
+                      className="flex items-center justify-center p-3 font-semibold text-red-500 hover:text-red-400"
                     >
                       View All Services →
                     </Link>
-                  </div>
-                </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                {/* Mobile Auth Buttons */}
-                <div className="pt-4 border-t border-gray-700">
-                  <SignedOut>
-                    <div className="flex flex-col gap-3">
-                      <SignInButton mode="modal">
-                        <Button
-                          variant="outline"
-                          className="w-full border-gray-600 text-white hover:bg-gray-800"
-                          onClick={() => setMobileMenuOpen(false)}
+              {/* Other Links */}
+              {otherLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                    isActive(link.href)
+                      ? "text-red-500 bg-red-500/10 font-semibold"
+                      : "text-white/90 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+
+              {/* Contact Dropdown */}
+              <DropdownMenu onOpenChange={(open) => setActiveDropdown(open ? 'contact' : null)}>
+                <DropdownMenuTrigger
+                  className={`nav-link flex items-center px-4 py-2 rounded-lg transition-all duration-200 ${
+                    activeDropdown === 'contact' || pathname.startsWith('/contact') || pathname.startsWith('/about')
+                      ? "text-red-500 bg-red-500/10 font-semibold"
+                      : "text-white/90 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  More
+                  <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-gray-900/95 backdrop-blur-md border-gray-700/50 shadow-2xl"
+                >
+                  <DropdownMenuGroup>
+                    {contactLinks.map((link) => (
+                      <DropdownMenuItem key={link.href} asChild className="focus:bg-gray-800 cursor-pointer">
+                        <Link
+                          href={link.href}
+                          className={`flex items-center p-3 ${isActive(link.href) ? 'text-red-400' : 'text-white'}`}
                         >
-                          Sign In
-                        </Button>
-                      </SignInButton>
-                      <SignUpButton mode="modal">
-                        <Button
-                          variant="outline"
-                          className="w-full border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          Sign Up
-                        </Button>
-                      </SignUpButton>
-                    </div>
-                  </SignedOut>
-                  <SignedIn>
-                    <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
-                      <UserButton
-                        afterSignOutUrl="/"
-                        appearance={{
-                          elements: {
-                            avatarBox: "w-10 h-10",
-                          },
-                        }}
-                      />
-                      <span className="text-white font-medium">My Account</span>
-                    </div>
-                  </SignedIn>
-                </div>
+                          {link.name}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                {/* Mobile Cart */}
-                <div className="flex items-center justify-center p-3 bg-gray-800 rounded-lg">
-                  <CartDrawer />
-                </div>
+              {/* Auth Buttons */}
+              <div className="ml-2 flex items-center gap-2 pl-4 border-l border-gray-700">
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-white/90 hover:text-white hover:bg-white/5 gap-2"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span className="hidden xl:inline">Sign In</span>
+                    </Button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <Button
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      <span className="hidden xl:inline">Sign Up</span>
+                    </Button>
+                  </SignUpButton>
+                </SignedOut>
+                <SignedIn>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2 text-white/90 hover:text-white hover:bg-white/5"
+                      >
+                        <User className="w-4 h-4" />
+                        <span className="hidden xl:inline font-medium">Account</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 bg-gray-900/95 backdrop-blur-md border-gray-700/50">
+                      <DropdownMenuLabel className="text-white/60 text-xs">My Account</DropdownMenuLabel>
+                      <DropdownMenuSeparator className="bg-gray-700/50" />
+                      <DropdownMenuItem asChild className="focus:bg-gray-800 cursor-pointer">
+                        <Link href="/dashboard" className="flex items-center p-3 text-white">
+                          <LayoutGrid className="w-4 h-4 mr-3" />
+                          Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="focus:bg-gray-800 cursor-pointer">
+                        <Link href="/dashboard/orders" className="flex items-center p-3 text-white">
+                          <ShoppingBag className="w-4 h-4 mr-3" />
+                          My Orders
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-gray-700/50" />
+                      <div className="p-2">
+                        <UserButton
+                          appearance={{
+                            elements: {
+                              avatarBox: "w-full",
+                            },
+                          }}
+                        />
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </SignedIn>
 
-                {/* Mobile Get Quote Button */}
+                {/* Cart */}
+                <CartDrawer />
+              </div>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex lg:hidden items-center gap-2">
+              <SignedIn>
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-9 h-9",
+                    },
+                  }}
+                />
+              </SignedIn>
+              <CartDrawer />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/10"
+                onClick={() => setMobileMenuOpen(true)}
+              >
+                <Menu className="w-6 h-6" />
+              </Button>
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      {/* Mobile Menu */}
+      <div
+        className={`fixed inset-y-0 right-0 w-full sm:w-96 bg-gray-900/98 backdrop-blur-xl z-50 transform transition-transform duration-300 ease-out ${
+          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="h-full flex flex-col">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+            <h2 className="text-xl font-black text-white tracking-tight uppercase">Menu</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/10"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <X className="w-6 h-6" />
+            </Button>
+          </div>
+
+          {/* Mobile Content */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            {/* Shop Section */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-600/20 rounded-lg flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5 text-red-500" />
+                </div>
+                <h3 className="text-lg font-black text-white uppercase tracking-wider">Shop</h3>
+              </div>
+              <div className="space-y-2 ml-13">
+                {shopItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
+                        isActive(item.href)
+                          ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
+                          : 'bg-gray-800/50 hover:bg-gray-800 text-white/90'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        isActive(item.href) ? 'bg-white/20' : 'bg-gray-700'
+                      }`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-lg">{item.name}</div>
+                        <div className={`text-sm ${isActive(item.href) ? 'text-white/70' : 'text-gray-400'}`}>
+                          {item.description}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Tools Section */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+                  <Wrench className="w-5 h-5 text-blue-500" />
+                </div>
+                <h3 className="text-lg font-black text-white uppercase tracking-wider">Tools</h3>
+              </div>
+              <div className="space-y-2 ml-13">
+                {toolsItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
+                        isActive(item.href)
+                          ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
+                          : 'bg-gray-800/50 hover:bg-gray-800 text-white/90'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        isActive(item.href) ? 'bg-white/20' : 'bg-gray-700'
+                      }`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-lg">{item.name}</div>
+                        <div className={`text-sm ${isActive(item.href) ? 'text-white/70' : 'text-gray-400'}`}>
+                          {item.description}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Services Section */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-purple-500" />
+                </div>
+                <h3 className="text-lg font-black text-white uppercase tracking-wider">Services</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2 ml-13">
+                {services.map((service) => {
+                  const Icon = service.icon;
+                  return (
+                    <Link
+                      key={service.href}
+                      href={service.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex flex-col items-center p-4 rounded-xl bg-gray-800/50 hover:bg-gray-800 transition-all duration-200 text-center"
+                    >
+                      <div className={`${service.iconBg} w-12 h-12 rounded-xl flex items-center justify-center mb-2 flex-shrink-0`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="font-semibold text-white text-sm leading-tight">{service.name}</div>
+                    </Link>
+                  );
+                })}
+              </div>
+              <Link
+                href="/services"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block mt-3 p-4 rounded-xl bg-gray-800/50 hover:bg-gray-800 text-center font-semibold text-red-500 hover:text-red-400 transition-all duration-200"
+              >
+                View All Services →
+              </Link>
+            </div>
+
+            {/* Other Links */}
+            <div className="space-y-2">
+              {otherLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center p-4 rounded-xl transition-all duration-200 ${
+                    isActive(link.href)
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-800/50 hover:bg-gray-800 text-white/90'
+                  }`}
+                >
+                  <span className="font-semibold">{link.name}</span>
+                </Link>
+              ))}
+            </div>
+
+            {/* Contact Links */}
+            <div className="space-y-2">
+              {contactLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center p-4 rounded-xl transition-all duration-200 ${
+                    isActive(link.href)
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-800/50 hover:bg-gray-800 text-white/90'
+                  }`}
+                >
+                  <span className="font-semibold">{link.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile Footer - Auth */}
+          <div className="p-6 border-t border-gray-700/50 space-y-3">
+            <SignedOut>
+              <SignInButton mode="modal">
                 <Button
-                  asChild
-                  className="bg-red-600 text-white hover:bg-red-700 rounded-lg font-bold w-full mt-4"
+                  variant="outline"
+                  className="w-full h-12 border-gray-600 text-white hover:bg-gray-800 font-semibold"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Link href="/contact">Get Quote</Link>
+                  <LogIn className="w-5 h-5 mr-2" />
+                  Sign In
                 </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </nav>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button
+                  className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Create Account
+                </Button>
+              </SignUpButton>
+            </SignedOut>
+          </div>
+        </div>
+
+        {/* Backdrop */}
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[-1]"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
       </div>
-    </header>
+    </>
   );
 }

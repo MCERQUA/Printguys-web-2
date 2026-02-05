@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Sparkles } from 'lucide-react';
 import { DesignStudioCanvas } from './canvas';
@@ -16,12 +16,16 @@ interface DesignStudioProps {
   onSave?: (state: ProductState) => Promise<void>;
   isLoggedIn?: boolean;
   initialState?: ProductState;
+  sharedDesignId?: string;
+  designName?: string;
 }
 
 export const DesignStudio: React.FC<DesignStudioProps> = ({
   onSave,
   isLoggedIn = false,
   initialState,
+  sharedDesignId,
+  designName,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -33,6 +37,9 @@ export const DesignStudio: React.FC<DesignStudioProps> = ({
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isModified, setIsModified] = useState(false);
+  const [hasLoadedShared, setHasLoadedShared] = useState(false);
+  const [currentShareUrl, setCurrentShareUrl] = useState<string | null>(null);
 
   const [productState, setProductState] = useState<ProductState>(
     initialState || {
@@ -42,6 +49,23 @@ export const DesignStudio: React.FC<DesignStudioProps> = ({
       type: 'tshirt',
     }
   );
+
+  // Load shared design on mount
+  useEffect(() => {
+    if (initialState && !hasLoadedShared) {
+      setProductState(initialState);
+      setHasLoadedShared(true);
+    }
+  }, [initialState, hasLoadedShared]);
+
+  // Track modifications to shared designs
+  useEffect(() => {
+    if (sharedDesignId && hasLoadedShared && !isModified) {
+      // Set as modified once user makes any change
+      const timer = setTimeout(() => setIsModified(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [productState, sharedDesignId, hasLoadedShared, isModified]);
 
   // Handlers
   const handleToggleSide = () => {
@@ -117,6 +141,60 @@ export const DesignStudio: React.FC<DesignStudioProps> = ({
       trackDesignSave(productState.type);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Handle save and share - generates share URL
+  const handleSaveAndShare = async (thumbnail?: string): Promise<{ shareUrl: string } | null> => {
+    try {
+      const response = await fetch('/api/designs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: designName || 'Untitled Design',
+          frontDecals: productState.front,
+          backDecals: productState.back,
+          productColor: productState.color,
+          productType: productState.type,
+          thumbnail,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save design');
+      }
+
+      const data = await response.json();
+      setCurrentShareUrl(data.shareUrl);
+      return { shareUrl: data.shareUrl };
+    } catch (error) {
+      console.error('Error saving design:', error);
+      return null;
+    }
+  };
+
+  // Fork a shared design to create a new copy
+  const handleForkDesign = async (): Promise<string | null> => {
+    if (!sharedDesignId) return null;
+
+    try {
+      const response = await fetch(`/api/designs/${sharedDesignId}/fork`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fork design');
+      }
+
+      const data = await response.json();
+      // Redirect to new design
+      if (typeof window !== 'undefined') {
+        window.location.href = data.shareUrl;
+      }
+      return data.shareUrl;
+    } catch (error) {
+      console.error('Error forking design:', error);
+      return null;
     }
   };
 
@@ -254,6 +332,11 @@ export const DesignStudio: React.FC<DesignStudioProps> = ({
   };
 
   const handleShare = () => {
+    // If viewing a shared design and it's modified, fork it first
+    if (sharedDesignId && isModified) {
+      handleForkDesign();
+      return;
+    }
     setIsExportModalOpen(true);
   };
 
@@ -439,6 +522,11 @@ export const DesignStudio: React.FC<DesignStudioProps> = ({
         onClose={() => setIsExportModalOpen(false)}
         onExport={handleExport}
         designCount={{ front: productState.front.length, back: productState.back.length }}
+        onSaveAndShare={handleSaveAndShare}
+        existingShareUrl={currentShareUrl || (sharedDesignId ? `${typeof window !== 'undefined' ? window.location.origin : ''}/design-studio/shared/${sharedDesignId}` : undefined)}
+        sharedDesignId={sharedDesignId}
+        isModified={isModified}
+        onFork={handleForkDesign}
       />
 
       <OrderForm

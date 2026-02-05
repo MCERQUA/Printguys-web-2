@@ -548,11 +548,21 @@ model OrderNote {
 
 model Design {
   id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
 
   name        String
   description String?
+
+  // Sharing
+  shareId     String   @unique
+  parentDesignId  String?
+  parentDesign    Design?  @relation("DesignForks", fields: [parentDesignId], references: [id])
+  forks           Design[] @relation("DesignForks")
+
+  // Analytics
+  viewCount   Int      @default(0)
+  forkCount   Int      @default(0)
 
   // Design data
   canvasData  Json?    // Fabric.js/Konva.js canvas state
@@ -582,6 +592,7 @@ model Design {
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
+  @@index([shareId])
   @@map("designs")
 }
 

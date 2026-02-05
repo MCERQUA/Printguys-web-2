@@ -10,6 +10,11 @@ interface ExportModalProps {
   onClose: () => void;
   onExport: (format: 'png' | 'jpg') => Promise<string | null>;
   designCount: { front: number; back: number };
+  onSaveAndShare?: (thumbnail?: string) => Promise<{ shareUrl: string } | null>;
+  existingShareUrl?: string;
+  sharedDesignId?: string;
+  isModified?: boolean;
+  onFork?: () => Promise<string | null>;
 }
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -17,6 +22,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   onClose,
   onExport,
   designCount,
+  onSaveAndShare,
+  existingShareUrl,
+  sharedDesignId,
+  isModified,
+  onFork,
 }) => {
   const [activeTab, setActiveTab] = useState<'download' | 'share'>('download');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -25,6 +35,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(existingShareUrl || null);
+  const [forking, setForking] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -63,8 +76,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       setPreviewImage(null);
       setError(null);
       setActiveTab('download');
+      setShareUrl(existingShareUrl || null);
     }
-  }, [isOpen]);
+  }, [isOpen, existingShareUrl]);
 
   const handleDownload = () => {
     if (!previewImage) return;
@@ -85,10 +99,46 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
   const handleCopyLink = () => {
     if (typeof window === 'undefined') return;
-    const shareUrl = `${window.location.origin}/design-studio`;
-    navigator.clipboard.writeText(shareUrl);
+    const urlToCopy = shareUrl || `${window.location.origin}/design-studio`;
+    navigator.clipboard.writeText(urlToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSaveAndShare = async () => {
+    if (!onSaveAndShare) return;
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const result = await onSaveAndShare(previewImage || undefined);
+      if (result?.shareUrl) {
+        setShareUrl(result.shareUrl);
+      } else {
+        setError('Failed to save design. Please try again.');
+      }
+    } catch (err) {
+      console.error('Save failed:', err);
+      setError('Failed to save design. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleFork = async () => {
+    if (!onFork) return;
+
+    setForking(true);
+    try {
+      await onFork();
+      // The fork handler will redirect, so we close the modal
+      onClose();
+    } catch (err) {
+      console.error('Fork failed:', err);
+      setError('Failed to fork design. Please try again.');
+    } finally {
+      setForking(false);
+    }
   };
 
   const handleNativeShare = async () => {
@@ -327,13 +377,85 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
               {activeTab === 'share' && (
                 <div className="space-y-4">
+                  {/* Fork Button - for modified shared designs */}
+                  {sharedDesignId && isModified && onFork && (
+                    <motion.button
+                      className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                      onClick={handleFork}
+                      disabled={forking}
+                      whileHover={{ scale: 1.02, boxShadow: '0 0 20px rgba(245,158,11,0.5)' }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {forking ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Forking...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-5 h-5" />
+                          Fork & Make Your Own
+                        </>
+                      )}
+                    </motion.button>
+                  )}
+
+                  {/* Save & Share Button - for new designs */}
+                  {!shareUrl && !sharedDesignId && onSaveAndShare && (
+                    <motion.button
+                      className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                      onClick={handleSaveAndShare}
+                      disabled={isSaving || isGenerating}
+                      whileHover={{ scale: 1.02, boxShadow: '0 0 20px rgba(239,68,68,0.5)' }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {isSaving ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Share2 className="w-5 h-5" />
+                          Save & Get Share Link
+                        </>
+                      )}
+                    </motion.button>
+                  )}
+
+                  {/* Share URL Display */}
+                  {shareUrl && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-gray-500 uppercase">
+                        Your share link
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={shareUrl}
+                          className="flex-1 bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500/50"
+                        />
+                        <motion.button
+                          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-sm flex items-center gap-2"
+                          onClick={handleCopyLink}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                          {copied ? 'Copied!' : 'Copy'}
+                        </motion.button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Share with Image Button */}
                   {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
                     <motion.button
-                      className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                       onClick={handleNativeShare}
                       disabled={!previewImage || isGenerating}
-                      whileHover={{ scale: 1.02, boxShadow: '0 0 20px rgba(239,68,68,0.5)' }}
+                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <Share2 className="w-5 h-5" />
@@ -353,32 +475,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     Open Image in New Tab
                   </motion.button>
 
-                  {/* Copy Link */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase">
-                      Or copy link
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        readOnly
-                        value={typeof window !== 'undefined' ? `${window.location.origin}/design-studio` : ''}
-                        className="flex-1 bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500/50"
-                      />
-                      <motion.button
-                        className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-sm flex items-center gap-2"
-                        onClick={handleCopyLink}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                        {copied ? 'Copied!' : 'Copy'}
-                      </motion.button>
-                    </div>
-                  </div>
-
                   <p className="text-xs text-gray-500 text-center">
-                    Tip: Use &quot;Share Design Image&quot; to share the actual design with your image attached
+                    {shareUrl
+                      ? 'Anyone with this link can view and fork your design.'
+                      : 'Save your design to get a shareable link.'}
                   </p>
                 </div>
               )}

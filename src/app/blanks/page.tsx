@@ -93,26 +93,28 @@ function CategoryCard({ category }: { category: Category }) {
           unoptimized
           priority={false}
         />
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-500" />
+        {/* Light overlay - images should be visible */}
+        <div className="absolute inset-0 bg-black/20" />
+        {/* Gradient overlay at bottom for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
       </div>
 
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center p-8">
-        {/* Category name with effect */}
-        <h2 className="text-6xl md:text-8xl lg:text-9xl font-light text-white text-center mb-4 tracking-tight group-hover:tracking-wider transition-all duration-500">
+        {/* Category name with Printguys brand style */}
+        <h2 className="text-7xl md:text-9xl lg:text-[12rem] font-black text-white text-center mb-6 tracking-tighter uppercase leading-none drop-shadow-2xl group-hover:scale-105 transition-transform duration-500">
           {category.name}
         </h2>
 
-        {/* Subtle product count */}
-        <p className="text-lg md:text-xl text-white/60 mb-12 font-light tracking-wide">
+        {/* Product count */}
+        <p className="text-xl md:text-2xl text-white/90 mb-14 font-black tracking-widest uppercase">
           {category._count.products} Products
         </p>
 
         {/* CTA */}
-        <div className="flex items-center gap-3 text-white text-lg font-medium tracking-wide group-hover:gap-6 transition-all duration-300">
-          <span className="border-b border-white/30 pb-1">Explore Collection</span>
-          <ArrowRight className="w-5 h-5" />
+        <div className="flex items-center gap-4 text-white text-xl font-black tracking-wider group-hover:gap-8 transition-all duration-300">
+          <span className="border-b-4 border-red-500 pb-1 uppercase">Shop Now</span>
+          <ArrowRight className="w-7 h-7 text-red-500" />
         </div>
       </div>
 
@@ -129,7 +131,7 @@ function HeroSection() {
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-950 to-black" />
         <div className="absolute inset-0 opacity-5">
-          <div className="w-full h-full flex flex-wrap items-center justify-center gap-16 text-9xl font-light text-white">
+          <div className="w-full h-full flex flex-wrap items-center justify-center gap-16 text-9xl font-black text-white">
             {Array.from({ length: 25 }).map((_, i) => (
               <span key={i} className="opacity-20">PRINTGUYS</span>
             ))}
@@ -139,30 +141,30 @@ function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 text-center px-4">
-        <div className="inline-flex items-center gap-2 text-red-500 px-6 py-3 mb-10 border border-red-500/30">
-          <Shirt className="w-5 h-5" />
-          <span className="text-sm font-medium tracking-widest uppercase">Premium Wholesale Blanks</span>
+        <div className="inline-flex items-center gap-2 text-red-500 px-8 py-4 mb-12 border-2 border-red-500 bg-red-500/10">
+          <Shirt className="w-6 h-6" />
+          <span className="text-sm font-black tracking-[0.3em] uppercase">Premium Wholesale Blanks</span>
         </div>
 
-        <h1 className="text-7xl md:text-9xl lg:text-[12rem] font-light text-white mb-8 tracking-tighter leading-none">
+        <h1 className="text-8xl md:text-10xl lg:text-[14rem] font-black text-white mb-10 tracking-tighter uppercase leading-none">
           BLANKS
         </h1>
 
-        <p className="text-xl md:text-2xl text-white/50 mb-16 max-w-2xl mx-auto font-light">
-          Premium canvas for your creativity
+        <p className="text-2xl md:text-3xl text-white/80 mb-20 max-w-2xl mx-auto font-bold tracking-wide uppercase">
+          Premium Canvas For Your Creativity
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-6 justify-center">
+        <div className="flex flex-col sm:flex-row gap-8 justify-center">
           <Link
             href="/blanks/catalog"
-            className="inline-flex items-center gap-3 bg-white hover:bg-red-500 text-black hover:text-white px-10 py-5 text-lg font-medium transition-all duration-300"
+            className="inline-flex items-center gap-4 bg-red-500 hover:bg-red-600 text-white px-14 py-6 text-xl font-black uppercase tracking-wider transition-all duration-300 shadow-2xl shadow-red-500/50 hover:scale-105"
           >
-            View All Items
-            <ArrowRight className="w-5 h-5" />
+            Shop All
+            <ArrowRight className="w-6 h-6" />
           </Link>
         </div>
 
-        <p className="mt-12 text-white/30 text-sm tracking-widest uppercase">
+        <p className="mt-16 text-white/60 text-base font-bold tracking-[0.2em] uppercase">
           Gildan • Bella+Canvas • Next Level • Champion
         </p>
       </div>
@@ -202,25 +204,25 @@ export default async function BlanksLandingPage() {
       </Suspense>
 
       {/* Bottom CTA */}
-      <section className="relative py-32 bg-black">
+      <section className="relative py-40 bg-black">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-light text-white mb-6 tracking-tight">
+          <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tight uppercase">
             Need Custom Printing?
           </h2>
-          <p className="text-xl text-white/50 mb-12 max-w-2xl mx-auto font-light">
-            We offer DTF transfers, screen printing, embroidery, and more. Get a quote for your custom apparel project.
+          <p className="text-2xl text-white/70 mb-16 max-w-3xl mx-auto font-bold tracking-wide uppercase">
+            DTF Transfers • Screen Printing • Embroidery • More
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-6">
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 bg-white hover:bg-red-500 text-black hover:text-white px-10 py-5 text-lg font-medium transition-all duration-300"
+              className="inline-flex items-center gap-3 bg-red-500 hover:bg-red-600 text-white px-14 py-6 text-xl font-black uppercase tracking-wider transition-all duration-300 shadow-xl shadow-red-500/30 hover:scale-105"
             >
-              Get a Quote
-              <ArrowRight className="w-5 h-5" />
+              Get A Quote
+              <ArrowRight className="w-6 h-6" />
             </Link>
             <Link
               href="/services/dtf"
-              className="inline-flex items-center gap-2 border border-white/20 hover:border-white text-white px-10 py-5 text-lg font-medium transition-all duration-300"
+              className="inline-flex items-center gap-3 border-2 border-white/40 hover:border-white hover:bg-white/10 text-white px-14 py-6 text-xl font-black uppercase tracking-wider transition-all duration-300"
             >
               View Services
             </Link>

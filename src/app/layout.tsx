@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import "./globals.css";
-import { ContactBanner, Header, Footer } from "@/components/layout";
+import { ContactBanner, Header, Footer, FloatingDesignButton } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { LocalBusinessSchema } from "@/components/seo/schema-markup";
@@ -82,6 +82,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <FloatingDesignButton />
           <Toaster position="top-right" />
         </body>
       </html>
