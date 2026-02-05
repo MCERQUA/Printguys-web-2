@@ -175,6 +175,25 @@ npx prisma db push  # Syncs schema (affects production!)
 npx prisma studio   # Opens Prisma Studio (database GUI)
 ```
 
+## Authentication & Middleware
+
+### Clerk Middleware
+
+**File**: `/src/middleware.ts`
+
+Clerk middleware protects routes - if a route is NOT in the public routes list, it requires authentication.
+
+**Current Public Routes:**
+- `/`, `/about`, `/contact`, `/faq`, `/portfolio`, `/pricing`, `/quote`
+- `/blog(.*)`, `/services(.*)`, `/blanks(.*)`, `/design-studio(.*)`
+- `/sign-in(.*)`, `/sign-up(.*)`
+- `/api/webhook(.*)`, `/api/blanks(.*)`
+
+**IMPORTANT**: When adding new pages that should be publicly accessible, add them to the `isPublicRoute` matcher in middleware.ts, otherwise they will return 404 for unauthenticated users.
+
+**Protected Routes:**
+- `/dashboard(.*)` - Requires authentication
+
 ## Common Build Failures
 
 | Error | Solution |
