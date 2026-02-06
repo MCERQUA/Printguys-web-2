@@ -125,11 +125,11 @@ async function uploadToCloudinary(
 }
 
 // Get all unique image URLs from database
-async function getAllSsActivewearImages(): Map<string, {
+async function getAllSsActivewearImages(): Promise<Map<string, {
   url: string;
   styleId: string;
   colorCode: string;
-}> {
+}>> {
   const products = await prisma.blankProduct.findMany({
     where: {
       supplier: { code: 'SSA' },
