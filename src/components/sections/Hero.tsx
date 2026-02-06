@@ -29,8 +29,7 @@ export function Hero({
   title = "Professional Printing & Custom Services",
   subtitle = "Custom printing in apparel and merchandise in Concord ON - no minimums.",
   stats = [
-    { value: "2-5 Days", label: "Fast Turnaround" },
-    { value: "$0.038/sq\"", label: "Transfer Pricing" },
+    { value: "Fast", label: "Turnaround" },
     { value: "No Min", label: "Order Requirements" },
   ],
   ctaButtons = [
